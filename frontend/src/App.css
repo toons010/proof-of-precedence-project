@@ -1,0 +1,439 @@
+/* ────────────────────────────────────────────────────────────────
+   Proof of Precedence  —  App Styles
+   Aesthetic: dark-mode research terminal / academic brutalism
+   Fonts: Syne (display) + Space Mono (mono/body)
+──────────────────────────────────────────────────────────────── */
+
+/* ── Reset & root variables ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #0a0c10;
+  --surface:      #111418;
+  --surface2:     #181c22;
+  --border:       #232830;
+  --border-hi:    #2e3540;
+  --text:         #e8ecf0;
+  --text-muted:   #6b7684;
+  --text-dim:     #3d4752;
+  --accent:       #00e5a0;        /* emerald green  */
+  --accent2:      #0070f3;        /* electric blue  */
+  --warn:         #f0a500;
+  --danger:       #e03e3e;
+  --success:      #00e5a0;
+  --step-num:     #1a2030;
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+  --radius:       6px;
+  --radius-lg:    12px;
+  --shadow:       0 4px 32px rgba(0,0,0,.6);
+  --transition:   0.18s ease;
+}
+
+html { font-size: 16px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scanline noise overlay ───────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 0;
+  background-image: repeating-linear-gradient(
+    transparent 0px,
+    transparent 2px,
+    rgba(255,255,255,.012) 2px,
+    rgba(255,255,255,.012) 4px
+  );
+  pointer-events: none;
+}
+
+/* ── App shell ────────────────────────────────────────────────── */
+.app {
+  position: relative; z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+.app-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0 24px;
+}
+.header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+.app-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.app-subtitle {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ── Wallet ───────────────────────────────────────────────────── */
+.wallet-section { flex-shrink: 0; }
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border-hi);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+}
+.wallet-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+.wallet-addr { font-family: var(--font-mono); color: var(--text); }
+.network-tag {
+  background: rgba(0,229,160,.12);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Flow bar ─────────────────────────────────────────────────── */
+.flow-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.flow-step { color: var(--accent); }
+.flow-arrow { color: var(--border-hi); }
+
+/* ── Main layout ──────────────────────────────────────────────── */
+.app-main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 40px auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Step cards ───────────────────────────────────────────────── */
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.step-card:hover { border-color: var(--border-hi); }
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.step-number {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--step-num);
+  line-height: 1;
+  user-select: none;
+  min-width: 42px;
+}
+.step-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.step-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-transform: uppercase;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent2);
+  color: #fff;
+  border-color: var(--accent2);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #1a80ff;
+  border-color: #1a80ff;
+  box-shadow: 0 0 14px rgba(0,112,243,.5);
+}
+
+.btn-accent {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-accent:hover:not(:disabled) {
+  background: rgba(0,229,160,.1);
+  box-shadow: 0 0 14px rgba(0,229,160,.3);
+}
+
+.btn-verify {
+  background: var(--warn);
+  color: #000;
+  border-color: var(--warn);
+}
+.btn-verify:hover:not(:disabled) {
+  background: #f5b800;
+  box-shadow: 0 0 14px rgba(240,165,0,.4);
+}
+
+.full-width { width: 100%; }
+
+/* ── Text inputs ──────────────────────────────────────────────── */
+.text-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.text-input::placeholder { color: var(--text-dim); }
+.text-input:focus { border-color: var(--accent2); }
+
+.field-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ── Drop zone ────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--border-hi);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  user-select: none;
+}
+.drop-zone:hover, .drop-zone.has-file {
+  border-color: var(--accent2);
+  background: rgba(0,112,243,.05);
+}
+.drop-prompt { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.drop-icon { font-size: 2rem; opacity: 0.5; }
+
+.file-info { display: flex; align-items: center; gap: 12px; justify-content: center; }
+.file-icon { font-size: 1.5rem; }
+.file-name { color: var(--text); font-size: 0.85rem; }
+.file-size { color: var(--text-muted); font-size: 0.72rem; }
+
+/* ── Status messages ──────────────────────────────────────────── */
+.status-msg {
+  font-size: 0.78rem;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  word-break: break-all;
+}
+.status-success { background: rgba(0,229,160,.1);  color: var(--success); border: 1px solid rgba(0,229,160,.25); }
+.status-error   { background: rgba(224,62,62,.1);  color: var(--danger);  border: 1px solid rgba(224,62,62,.25); }
+.status-loading { background: rgba(0,112,243,.1);  color: var(--accent2); border: 1px solid rgba(0,112,243,.25); }
+
+/* ── Result box ───────────────────────────────────────────────── */
+.result-box {
+  background: var(--surface2);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.result-pass { border-color: rgba(0,229,160,.4); background: rgba(0,229,160,.04); }
+.result-fail { border-color: rgba(224,62,62,.3);  background: rgba(224,62,62,.04); }
+
+/* ── Copyable field ───────────────────────────────────────────── */
+.copyable-field { display: flex; flex-direction: column; gap: 3px; }
+.field-row { display: flex; align-items: center; gap: 8px; }
+.field-value {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent2);
+  background: var(--bg);
+  padding: 5px 8px;
+  border-radius: var(--radius);
+  word-break: break-all;
+  border: 1px solid var(--border);
+}
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border-hi);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── IPFS link ─────────────────────────────────────────────────── */
+.ipfs-link {
+  font-size: 0.72rem;
+  color: var(--accent2);
+  text-decoration: none;
+}
+.ipfs-link:hover { text-decoration: underline; }
+
+/* ── Precedence badge ─────────────────────────────────────────── */
+.precedence-badge {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 6px;
+  background: rgba(0,229,160,.08);
+  border-radius: var(--radius);
+  border: 1px solid rgba(0,229,160,.2);
+}
+
+/* ── Verify result ────────────────────────────────────────────── */
+.verify-icon { font-size: 2rem; text-align: center; }
+.verify-headline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+.verify-detail { font-size: 0.78rem; color: var(--text-muted); }
+.verify-detail.small { font-size: 0.7rem; line-height: 1.5; opacity: 0.8; }
+
+/* ── Manual CID section ───────────────────────────────────────── */
+.manual-cid-section { display: flex; flex-direction: column; gap: 10px; }
+.info-note {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+.info-note code { color: var(--warn); font-size: 0.72rem; }
+.info-note a { color: var(--accent2); }
+
+/* ── Badge ────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.badge-idle    { background: var(--surface2); color: var(--text-muted); }
+.badge-loading { background: rgba(0,112,243,.15); color: var(--accent2); }
+.badge-success { background: rgba(0,229,160,.15); color: var(--success); }
+.badge-error   { background: rgba(224,62,62,.15);  color: var(--danger);  }
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.app-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .header-inner { height: auto; padding: 14px 0; flex-direction: column; align-items: flex-start; }
+  .flow-bar { flex-direction: column; gap: 4px; }
+  .app-main { padding: 0 16px; margin: 24px auto; }
+  .step-header { padding: 16px 16px 12px; }
+  .step-body { padding: 16px; }
+  .step-number { font-size: 1.5rem; }
+}
