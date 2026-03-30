@@ -1,14 +1,13 @@
 /**
- * App.js  —  Proof of Precedence Frontend
- * Modified to use direct private key instead of MetaMask.
- * No browser wallet extension required.
+ * App.js — Proof of Precedence
+ * Redesigned: Apple/Ferrari-level professional UI
+ * No MetaMask required — uses direct private key via ethers.js
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { ethers } from "ethers";
 import "./App.css";
 
-// ── ABI ───────────────────────────────────────────────────────────────────────
 const REGISTRY_ABI = [
   "function submitPaper(string calldata _ipfsCID) external",
   "function getPaper(string calldata _ipfsCID) external view returns (string memory, address, uint256, bool)",
@@ -17,28 +16,25 @@ const REGISTRY_ABI = [
   "event PaperSubmitted(string indexed ipfsCID, address indexed author, uint256 timestamp)",
 ];
 
-// ── Environment variables ─────────────────────────────────────────────────────
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || "";
 const PINATA_API_KEY   = process.env.REACT_APP_PINATA_API_KEY   || "";
 const PINATA_SECRET    = process.env.REACT_APP_PINATA_SECRET    || "";
 const RPC_URL          = process.env.REACT_APP_RPC_URL          || "http://127.0.0.1:8545";
 const DEFAULT_KEY      = process.env.REACT_APP_PRIVATE_KEY      || "";
 
-// ── Helper: get a signer from private key ─────────────────────────────────────
 function getSigner(privateKey) {
   const provider = new ethers.JsonRpcProvider(RPC_URL);
   return new ethers.Wallet(privateKey, provider);
 }
 
-// ── Helper: upload to Pinata ──────────────────────────────────────────────────
 async function uploadToPinata(file, onProgress) {
   const formData = new FormData();
   formData.append("file", file, file.name);
   formData.append("pinataMetadata", JSON.stringify({ name: file.name }));
   formData.append("pinataOptions",  JSON.stringify({ cidVersion: 1 }));
-  onProgress("Uploading to IPFS…");
+  onProgress("Uploading to IPFS via Pinata…");
   const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-    method:  "POST",
+    method: "POST",
     headers: {
       pinata_api_key:        PINATA_API_KEY,
       pinata_secret_api_key: PINATA_SECRET,
@@ -53,48 +49,54 @@ async function uploadToPinata(file, onProgress) {
   return IpfsHash;
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function StepCard({ number, title, children }) {
-  return (
-      <div className="step-card">
-        <div className="step-header">
-          <span className="step-number">{String(number).padStart(2, "0")}</span>
-          <h2 className="step-title">{title}</h2>
-        </div>
-        <div className="step-body">{children}</div>
-      </div>
-  );
-}
-
-function CopyableField({ value, label }) {
+// ── Copyable field ─────────────────────────────────────────────
+function CopyField({ label, value }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(value);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setTimeout(() => setCopied(false), 1800);
   };
   return (
-      <div className="copyable-field">
-        <span className="field-label">{label}</span>
-        <div className="field-row">
-          <code className="field-value">{value}</code>
-          <button className="copy-btn" onClick={copy} title="Copy">
-            {copied ? "✓" : "⎘"}
-          </button>
+      <div className="result-row">
+        <span className="result-row-label">{label}</span>
+        <div className="result-row-value">
+          <span className="result-row-text">{value}</span>
+          <button className="copy-btn" onClick={copy}>{copied ? "✓ Copied" : "Copy"}</button>
         </div>
       </div>
   );
 }
 
-// ── Main App ──────────────────────────────────────────────────────────────────
+// ── Status block ───────────────────────────────────────────────
+function Status({ type, message }) {
+  if (!message) return null;
+  const icons = { success: "✓", error: "✕", loading: "" };
+  return (
+      <div className={`status-block status-${type}`}>
+        {type === "loading"
+            ? <span className="spinner" />
+            : <span className="status-block-icon">{icons[type]}</span>
+        }
+        <span>{message}</span>
+      </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 export default function App() {
-  // ── Wallet state ────────────────────────────────────────────────────────
+  const [scrolled, setScrolled]             = useState(false);
+  const [activeTab, setActiveTab]           = useState("upload");
+  const [showApp, setShowApp]               = useState(false);
+  const appRef = useRef(null);
+
+  // ── Wallet ──────────────────────────────────────────────────
   const [privateKey, setPrivateKey]         = useState(DEFAULT_KEY);
   const [walletAddress, setWalletAddress]   = useState("");
   const [walletStatus, setWalletStatus]     = useState("idle");
   const [walletError, setWalletError]       = useState("");
 
-  // ── Step 1: IPFS upload ─────────────────────────────────────────────────
+  // ── Upload ──────────────────────────────────────────────────
   const [selectedFile, setSelectedFile]     = useState(null);
   const [uploadCid, setUploadCid]           = useState("");
   const [uploadStatus, setUploadStatus]     = useState("idle");
@@ -102,7 +104,7 @@ export default function App() {
   const [manualCid, setManualCid]           = useState("");
   const fileInputRef = useRef(null);
 
-  // ── Step 2: Submit ──────────────────────────────────────────────────────
+  // ── Submit ──────────────────────────────────────────────────
   const [submitCid, setSubmitCid]           = useState("");
   const [contractAddr, setContractAddr]     = useState(CONTRACT_ADDRESS);
   const [submitStatus, setSubmitStatus]     = useState("idle");
@@ -110,21 +112,27 @@ export default function App() {
   const [txHash, setTxHash]                 = useState("");
   const [submitTimestamp, setSubmitTimestamp] = useState(null);
 
-  // ── Step 3: Verify ──────────────────────────────────────────────────────
+  // ── Verify ──────────────────────────────────────────────────
   const [verifyCid, setVerifyCid]           = useState("");
   const [verifyAddr, setVerifyAddr]         = useState(CONTRACT_ADDRESS);
   const [verifyStatus, setVerifyStatus]     = useState("idle");
   const [verifyResult, setVerifyResult]     = useState(null);
 
-  // ────────────────────────────────────────────────────────────────────────
-  //  Connect wallet via private key
-  // ────────────────────────────────────────────────────────────────────────
+  // ── Scroll handler ──────────────────────────────────────────
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToApp = () => {
+    setShowApp(true);
+    setTimeout(() => appRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  };
+
+  // ── Connect wallet ──────────────────────────────────────────
   const connectWallet = useCallback(async () => {
-    if (!privateKey.trim()) {
-      setWalletError("Please enter your private key.");
-      setWalletStatus("error");
-      return;
-    }
+    if (!privateKey.trim()) { setWalletError("Enter your private key."); setWalletStatus("error"); return; }
     setWalletStatus("loading");
     setWalletError("");
     try {
@@ -132,15 +140,13 @@ export default function App() {
       const address = await signer.getAddress();
       setWalletAddress(address);
       setWalletStatus("success");
-    } catch (err) {
-      setWalletError("Invalid private key or cannot connect to RPC.");
+    } catch {
+      setWalletError("Invalid private key or cannot reach RPC.");
       setWalletStatus("error");
     }
   }, [privateKey]);
 
-  // ────────────────────────────────────────────────────────────────────────
-  //  Step 1: Upload PDF to IPFS
-  // ────────────────────────────────────────────────────────────────────────
+  // ── Upload ──────────────────────────────────────────────────
   const handleFileSelect = (e) => {
     const f = e.target.files[0];
     if (f) { setSelectedFile(f); setUploadCid(""); setUploadMsg(""); setUploadStatus("idle"); }
@@ -153,369 +159,448 @@ export default function App() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile && !manualCid) {
-      setUploadMsg("Please select a PDF or paste a CID manually.");
-      setUploadStatus("error");
-      return;
-    }
     if (!PINATA_API_KEY || !selectedFile) {
       const cid = manualCid.trim();
       if (!cid) { setUploadMsg("Paste an IPFS CID below to continue."); setUploadStatus("error"); return; }
-      setUploadCid(cid);
-      setSubmitCid(cid);
-      setVerifyCid(cid);
+      setUploadCid(cid); setSubmitCid(cid); setVerifyCid(cid);
       setUploadStatus("success");
-      setUploadMsg("CID accepted from manual entry.");
+      setUploadMsg("CID accepted. Proceed to Submit.");
       return;
     }
-    setUploadStatus("loading");
-    setUploadMsg("");
+    setUploadStatus("loading"); setUploadMsg("");
     try {
       const cid = await uploadToPinata(selectedFile, setUploadMsg);
-      setUploadCid(cid);
-      setSubmitCid(cid);
-      setVerifyCid(cid);
+      setUploadCid(cid); setSubmitCid(cid); setVerifyCid(cid);
       setUploadStatus("success");
-      setUploadMsg(`Pinned successfully — CID: ${cid}`);
+      setUploadMsg("Successfully pinned to IPFS.");
     } catch (err) {
-      setUploadStatus("error");
-      setUploadMsg(err.message);
+      setUploadStatus("error"); setUploadMsg(err.message);
     }
   };
 
-  // ────────────────────────────────────────────────────────────────────────
-  //  Step 2: Submit CID to blockchain
-  // ────────────────────────────────────────────────────────────────────────
+  // ── Submit ──────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!submitCid.trim())    { setSubmitMsg("Enter an IPFS CID first.");      setSubmitStatus("error"); return; }
-    if (!contractAddr.trim()) { setSubmitMsg("Enter the contract address.");    setSubmitStatus("error"); return; }
-    if (!walletAddress)       { setSubmitMsg("Connect your wallet first.");     setSubmitStatus("error"); return; }
+    if (!submitCid.trim())    { setSubmitMsg("Enter an IPFS CID."); setSubmitStatus("error"); return; }
+    if (!contractAddr.trim()) { setSubmitMsg("Enter the contract address."); setSubmitStatus("error"); return; }
+    if (!walletAddress)       { setSubmitMsg("Connect your wallet first."); setSubmitStatus("error"); return; }
 
-    setSubmitStatus("loading");
-    setSubmitMsg("Sending transaction…");
-    setTxHash("");
-
+    setSubmitStatus("loading"); setSubmitMsg("Sending transaction to blockchain…"); setTxHash("");
     try {
       const signer   = getSigner(privateKey.trim());
       const registry = new ethers.Contract(contractAddr, REGISTRY_ABI, signer);
-
-      const exists = await registry.paperExists(submitCid);
+      const exists   = await registry.paperExists(submitCid);
       if (exists) {
         setSubmitStatus("error");
-        setSubmitMsg("This CID is already registered on-chain. Try verifying it in Step 3.");
+        setSubmitMsg("This CID is already registered. Verify it in the Verify tab.");
         return;
       }
-
-      const tx      = await registry.submitPaper(submitCid);
+      const tx = await registry.submitPaper(submitCid);
       setTxHash(tx.hash);
-      setSubmitMsg(`TX sent: ${tx.hash.slice(0, 18)}… — waiting for confirmation…`);
-
+      setSubmitMsg("Transaction sent — awaiting confirmation…");
       const receipt = await tx.wait(1);
       const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const block   = await provider.getBlock(receipt.blockNumber);
-      const ts      = block.timestamp;
-
-      setSubmitTimestamp(ts);
-      setVerifyCid(submitCid);
-      setVerifyAddr(contractAddr);
+      const block    = await provider.getBlock(receipt.blockNumber);
+      setSubmitTimestamp(block.timestamp);
+      setVerifyCid(submitCid); setVerifyAddr(contractAddr);
       setSubmitStatus("success");
-      setSubmitMsg(
-          `Confirmed in block #${receipt.blockNumber} — ` +
-          `${new Date(ts * 1000).toUTCString()}`
-      );
+      setSubmitMsg(`Confirmed in block #${receipt.blockNumber}`);
     } catch (err) {
-      console.error(err);
       setSubmitStatus("error");
       setSubmitMsg(err?.reason || err?.message || "Transaction failed.");
     }
   };
 
-  // ────────────────────────────────────────────────────────────────────────
-  //  Step 3: Verify
-  // ────────────────────────────────────────────────────────────────────────
+  // ── Verify ──────────────────────────────────────────────────
   const handleVerify = async () => {
-    if (!verifyCid.trim())  { setVerifyResult({ error: "Enter a CID to verify." });          setVerifyStatus("error"); return; }
-    if (!verifyAddr.trim()) { setVerifyResult({ error: "Enter the contract address." });      setVerifyStatus("error"); return; }
-
-    setVerifyStatus("loading");
-    setVerifyResult(null);
-
+    if (!verifyCid.trim())  { setVerifyResult({ error: "Enter a CID." }); setVerifyStatus("error"); return; }
+    if (!verifyAddr.trim()) { setVerifyResult({ error: "Enter the contract address." }); setVerifyStatus("error"); return; }
+    setVerifyStatus("loading"); setVerifyResult(null);
     try {
       const provider = new ethers.JsonRpcProvider(RPC_URL);
       const registry = new ethers.Contract(verifyAddr, REGISTRY_ABI, provider);
       const [cid, author, timestamp, exists] = await registry.getPaper(verifyCid);
       const total = await registry.totalPapers();
-
       if (!exists) {
-        setVerifyStatus("error");
-        setVerifyResult({ exists: false });
+        setVerifyStatus("error"); setVerifyResult({ exists: false });
       } else {
         setVerifyStatus("success");
-        setVerifyResult({
-          exists: true,
-          cid,
-          author,
-          timestamp: Number(timestamp),
-          total: total.toString(),
-        });
+        setVerifyResult({ exists: true, cid, author, timestamp: Number(timestamp), total: total.toString() });
       }
     } catch (err) {
-      console.error(err);
-      setVerifyStatus("error");
-      setVerifyResult({ error: err.message });
+      setVerifyStatus("error"); setVerifyResult({ error: err.message });
     }
   };
 
-  // ────────────────────────────────────────────────────────────────────────
-  //  Render
-  // ────────────────────────────────────────────────────────────────────────
   const hasPinata = Boolean(PINATA_API_KEY && PINATA_SECRET);
 
   return (
       <div className="app">
-        {/* ── Header ── */}
-        <header className="app-header">
-          <div className="header-inner">
-            <div className="logo-group">
-              <span className="logo-icon">⛓</span>
-              <div>
-                <h1 className="app-title">Proof of Precedence</h1>
-                <p className="app-subtitle">Immutable academic publishing on blockchain</p>
-              </div>
-            </div>
 
-            {/* ── Wallet connect via private key ── */}
-            <div className="wallet-section">
-              {walletAddress ? (
-                  <div className="wallet-connected">
-                    <span className="wallet-dot" />
-                    <span className="wallet-addr">
-                  {walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}
-                </span>
-                    <span className="network-tag">Hardhat Local</span>
+        {/* ══ NAVBAR ══ */}
+        <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
+          <div className="nav-logo">
+            <div className="nav-logo-mark">⛓</div>
+            Proof of Precedence
+          </div>
+          <div className="nav-links">
+            <button className="nav-link" onClick={scrollToApp}>Launch App</button>
+            <button className="nav-link" onClick={() => document.querySelector(".how-section")?.scrollIntoView({ behavior: "smooth" })}>
+              How It Works
+            </button>
+          </div>
+          <div className="nav-wallet">
+            {walletAddress ? (
+                <div className="wallet-connected-display">
+                  <div className="wallet-pulse" />
+                  <span className="wallet-address">{walletAddress.slice(0,6)}…{walletAddress.slice(-4)}</span>
+                  <span className="wallet-network">Local</span>
+                </div>
+            ) : (
+                <button className="btn btn-outline btn-sm" onClick={scrollToApp}>Connect</button>
+            )}
+          </div>
+        </nav>
+
+        {/* ══ HERO ══ */}
+        <section className="hero">
+          <div className="hero-eyebrow">Blockchain · IPFS · Solidity</div>
+
+          <h1 className="hero-title">
+            Establish Your<br />
+            <span>Research Priority.</span>
+          </h1>
+
+          <p className="hero-subtitle">
+            Upload your paper to IPFS. Register its fingerprint on the blockchain.
+            Create an immutable, publicly verifiable timestamp that no one can dispute.
+          </p>
+
+          <div className="hero-cta">
+            <button className="btn-hero-primary" onClick={scrollToApp}>
+              Register a Paper
+            </button>
+            <button className="btn-hero-secondary" onClick={() => document.querySelector(".how-section")?.scrollIntoView({ behavior: "smooth" })}>
+              How It Works
+            </button>
+          </div>
+
+          <div className="hero-stats">
+            <div className="hero-stat">
+              <div className="hero-stat-value">SHA-256</div>
+              <div className="hero-stat-label">Content Hashing</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-value">EVM</div>
+              <div className="hero-stat-label">Smart Contract</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-value">IPFS</div>
+              <div className="hero-stat-label">Decentralised Storage</div>
+            </div>
+          </div>
+
+          <button className="hero-scroll" onClick={scrollToApp}>
+            <span>↓</span>
+            <span>Launch App</span>
+          </button>
+        </section>
+
+        {/* ══ HOW IT WORKS ══ */}
+        <section className="how-section">
+          <div className="how-inner">
+            <p className="section-label">The Process</p>
+            <h2 className="section-title">Three steps to permanent proof.</h2>
+
+            <div className="how-grid">
+              {[
+                { num: "01", icon: "📄", title: "Upload Your Paper", desc: "Drop your PDF. It gets uploaded to IPFS via Pinata. IPFS calculates a cryptographic fingerprint — the CID — from the exact bytes of your file." },
+                { num: "02", icon: "⛓", title: "Register on Chain", desc: "Your CID, wallet address, and a network timestamp are recorded in a Solidity smart contract. The contract rejects any future attempt to register the same CID." },
+                { num: "03", icon: "✓", title: "Verify Anytime", desc: "Anyone in the world can query the contract with a CID. If it exists, the blockchain returns the author address and timestamp — permanent, public, unchallengeable." },
+              ].map(({ num, icon, title, desc }) => (
+                  <div className="how-item" key={num}>
+                    <div className="how-item-num">{num}</div>
+                    <span className="how-item-icon">{icon}</span>
+                    <h3 className="how-item-title">{title}</h3>
+                    <p className="how-item-desc">{desc}</p>
                   </div>
-              ) : (
-                  <div className="key-connect">
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══ APP SECTION ══ */}
+        <section className="app-section" ref={appRef}>
+          <div className="section-inner">
+            <p className="section-label">The Application</p>
+            <h2 className="section-title">Register or verify a paper.</h2>
+
+            {/* Wallet panel */}
+            <div className="wallet-panel">
+              <div className="wallet-panel-info">
+                <div className="wallet-panel-title">Wallet Connection</div>
+                {walletAddress ? (
+                    <div className="wallet-connected-display">
+                      <div className="wallet-pulse" />
+                      <span className="wallet-address">{walletAddress}</span>
+                      <span className="wallet-network">Hardhat Local</span>
+                    </div>
+                ) : (
+                    <span style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                  Enter your private key to sign transactions
+                </span>
+                )}
+              </div>
+
+              {!walletAddress && (
+                  <div className="key-connect-inline">
                     <input
-                        className="text-input key-input"
+                        className="field-input"
                         type="password"
-                        placeholder="Paste private key (0x…)"
+                        placeholder="Private key (0x…)"
                         value={privateKey}
                         onChange={(e) => setPrivateKey(e.target.value)}
+                        style={{ flex: 1 }}
                     />
                     <button
-                        className="btn btn-primary"
+                        className="btn btn-gold btn-sm"
                         onClick={connectWallet}
                         disabled={walletStatus === "loading"}
                     >
-                      {walletStatus === "loading" ? "Connecting…" : "Connect"}
+                      {walletStatus === "loading" ? <><span className="spinner" /> Connecting</> : "Connect"}
                     </button>
-                    {walletError && <p className="status-msg status-error">{walletError}</p>}
                   </div>
               )}
+              {walletError && <Status type="error" message={walletError} />}
             </div>
-          </div>
-        </header>
 
-        {/* ── Flow bar ── */}
-        <div className="flow-bar">
-          {["Upload PDF → IPFS", "Submit CID → Chain", "Verify Precedence"].map((s, i) => (
-              <React.Fragment key={i}>
-                <span className="flow-step">{s}</span>
-                {i < 2 && <span className="flow-arrow">→</span>}
-              </React.Fragment>
-          ))}
-        </div>
-
-        <main className="app-main">
-
-          {/* ── Step 1: Upload ── */}
-          <StepCard number={1} title="Upload Paper to IPFS">
-            {hasPinata ? (
-                <>
-                  <div
-                      className={`drop-zone ${selectedFile ? "has-file" : ""}`}
-                      onDrop={handleDrop}
-                      onDragOver={(e) => e.preventDefault()}
-                      onClick={() => fileInputRef.current?.click()}
-                  >
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf"
-                        style={{ display: "none" }}
-                        onChange={handleFileSelect}
-                    />
-                    {selectedFile ? (
-                        <div className="file-info">
-                          <span className="file-icon">📄</span>
-                          <span className="file-name">{selectedFile.name}</span>
-                          <span className="file-size">{(selectedFile.size / 1024).toFixed(1)} KB</span>
-                        </div>
-                    ) : (
-                        <div className="drop-prompt">
-                          <span className="drop-icon">⬆</span>
-                          <span>Drop PDF here or click to browse</span>
-                        </div>
-                    )}
-                  </div>
+            {/* Tab navigation */}
+            <div className="tab-nav">
+              {[
+                { id: "upload", icon: "⬆", label: "Upload to IPFS",    num: "01" },
+                { id: "submit", icon: "⛓", label: "Submit to Chain",   num: "02" },
+                { id: "verify", icon: "✓", label: "Verify Precedence", num: "03" },
+              ].map(({ id, icon, label, num }) => (
                   <button
-                      className="btn btn-primary full-width"
-                      onClick={handleUpload}
-                      disabled={uploadStatus === "loading" || !selectedFile}
+                      key={id}
+                      className={`tab-btn ${activeTab === id ? "active" : ""}`}
+                      onClick={() => setActiveTab(id)}
                   >
-                    {uploadStatus === "loading" ? "Uploading…" : "Upload to IPFS via Pinata"}
+                    <span className="tab-icon">{icon}</span>
+                    <span>{label}</span>
+                    <span className="tab-num">{num}</span>
                   </button>
-                </>
-            ) : (
-                <div className="manual-cid-section">
-                  <p className="info-note">
-                    ℹ No Pinata keys detected. Upload your PDF to{" "}
-                    <a href="https://app.pinata.cloud" target="_blank" rel="noreferrer">Pinata</a>{" "}
-                    manually, then paste the CID below.
-                  </p>
-                  <input
-                      className="text-input"
-                      placeholder="bafybei… (IPFS CID)"
-                      value={manualCid}
-                      onChange={(e) => setManualCid(e.target.value)}
-                  />
-                  <button className="btn btn-primary full-width" onClick={handleUpload}>
-                    Use this CID
-                  </button>
+              ))}
+            </div>
+
+            {/* ── TAB: Upload ── */}
+            <div className={`tab-panel ${activeTab === "upload" ? "active" : ""}`}>
+              <div className="panel-card">
+                <div className="panel-header">
+                  <div className="panel-title">Upload Your Paper to IPFS</div>
+                  <div className="panel-desc">Your PDF will be pinned on IPFS. Its content fingerprint (CID) is returned for blockchain registration.</div>
                 </div>
-            )}
-
-            {uploadMsg && (
-                <p className={`status-msg status-${uploadStatus}`}>{uploadMsg}</p>
-            )}
-
-            {uploadCid && (
-                <div className="result-box">
-                  <CopyableField label="IPFS CID" value={uploadCid} />
-                  <a
-                      className="ipfs-link"
-                      href={`https://gateway.pinata.cloud/ipfs/${uploadCid}`}
-                      target="_blank"
-                      rel="noreferrer"
-                  >
-                    View on IPFS Gateway ↗
-                  </a>
-                </div>
-            )}
-          </StepCard>
-
-          {/* ── Step 2: Submit ── */}
-          <StepCard number={2} title="Submit CID to Blockchain">
-            <label className="field-label">Contract Address</label>
-            <input
-                className="text-input"
-                placeholder="0x…"
-                value={contractAddr}
-                onChange={(e) => setContractAddr(e.target.value)}
-            />
-
-            <label className="field-label" style={{ marginTop: 12 }}>IPFS CID</label>
-            <input
-                className="text-input"
-                placeholder="bafybei…"
-                value={submitCid}
-                onChange={(e) => setSubmitCid(e.target.value)}
-            />
-
-            <button
-                className="btn btn-accent full-width"
-                onClick={handleSubmit}
-                disabled={submitStatus === "loading"}
-                style={{ marginTop: 16 }}
-            >
-              {submitStatus === "loading" ? "Submitting…" : "Submit to Blockchain"}
-            </button>
-
-            {submitMsg && (
-                <p className={`status-msg status-${submitStatus}`}>{submitMsg}</p>
-            )}
-
-            {txHash && (
-                <div className="result-box">
-                  <CopyableField label="Transaction Hash" value={txHash} />
-                  {submitTimestamp && (
-                      <CopyableField
-                          label="Block Timestamp"
-                          value={new Date(submitTimestamp * 1000).toUTCString()}
-                      />
-                  )}
-                  <p className="precedence-badge">🔒 Precedence Established</p>
-                </div>
-            )}
-          </StepCard>
-
-          {/* ── Step 3: Verify ── */}
-          <StepCard number={3} title="Verify Proof of Precedence">
-            <label className="field-label">Contract Address</label>
-            <input
-                className="text-input"
-                placeholder="0x…"
-                value={verifyAddr}
-                onChange={(e) => setVerifyAddr(e.target.value)}
-            />
-
-            <label className="field-label" style={{ marginTop: 12 }}>IPFS CID to verify</label>
-            <input
-                className="text-input"
-                placeholder="bafybei…"
-                value={verifyCid}
-                onChange={(e) => setVerifyCid(e.target.value)}
-            />
-
-            <button
-                className="btn btn-verify full-width"
-                onClick={handleVerify}
-                disabled={verifyStatus === "loading"}
-                style={{ marginTop: 16 }}
-            >
-              {verifyStatus === "loading" ? "Querying…" : "Verify on Blockchain"}
-            </button>
-
-            {verifyResult && (
-                <div className={`result-box ${verifyResult.exists === false || verifyResult.error ? "result-fail" : "result-pass"}`}>
-                  {verifyResult.error ? (
-                      <p className="status-msg status-error">{verifyResult.error}</p>
-                  ) : verifyResult.exists === false ? (
+                <div className="panel-body">
+                  {hasPinata ? (
                       <>
-                        <p className="verify-icon">❌</p>
-                        <p className="verify-headline">NOT Registered</p>
-                        <p className="verify-detail">This CID has no on-chain record.</p>
+                        <div
+                            className={`drop-zone ${selectedFile ? "has-file" : ""}`}
+                            onDrop={handleDrop}
+                            onDragOver={(e) => e.preventDefault()}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                          <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handleFileSelect} />
+                          {selectedFile ? (
+                              <div className="file-preview">
+                                <span className="file-preview-icon">📄</span>
+                                <div className="file-preview-info">
+                                  <div className="file-preview-name">{selectedFile.name}</div>
+                                  <div className="file-preview-size">{(selectedFile.size / 1024).toFixed(1)} KB</div>
+                                </div>
+                              </div>
+                          ) : (
+                              <>
+                                <div className="drop-icon-wrap">⬆</div>
+                                <div className="drop-main-text">Drop your PDF here</div>
+                                <div className="drop-sub-text">or click to browse files</div>
+                              </>
+                          )}
+                        </div>
+                        <button className="btn btn-gold full-width" onClick={handleUpload} disabled={uploadStatus === "loading" || !selectedFile}>
+                          {uploadStatus === "loading" ? <><span className="spinner" /> Uploading…</> : "Upload to IPFS via Pinata"}
+                        </button>
                       </>
                   ) : (
-                      <>
-                        <p className="verify-icon">✅</p>
-                        <p className="verify-headline">Proof of Precedence Confirmed</p>
-                        <CopyableField label="Author" value={verifyResult.author} />
-                        <CopyableField
-                            label="Registered at"
-                            value={new Date(verifyResult.timestamp * 1000).toUTCString()}
-                        />
-                        <CopyableField label="IPFS CID" value={verifyResult.cid} />
-                        <p className="verify-detail">
-                          Total papers in registry: <strong>{verifyResult.total}</strong>
-                        </p>
-                        <p className="verify-detail small">
-                          The block timestamp is set by the network and cannot be
-                          altered retroactively. This record proves that this wallet
-                          submitted this exact paper content before anyone else.
-                        </p>
-                      </>
+                      <div className="manual-section">
+                        <div className="manual-note">
+                          <span className="manual-note-icon">ℹ</span>
+                          <span>
+                        No Pinata keys detected. Upload your PDF manually at{" "}
+                            <a href="https://app.pinata.cloud" target="_blank" rel="noreferrer">app.pinata.cloud</a>,
+                        then paste the CID below.
+                      </span>
+                        </div>
+                        <div className="field-group">
+                          <label className="field-label-text">IPFS CID</label>
+                          <input className="field-input" placeholder="bafybei…" value={manualCid} onChange={(e) => setManualCid(e.target.value)} />
+                        </div>
+                        <button className="btn btn-gold full-width" onClick={handleUpload}>
+                          Use This CID
+                        </button>
+                      </div>
+                  )}
+
+                  <Status type={uploadStatus} message={uploadMsg} />
+
+                  {uploadCid && (
+                      <div className="result-panel">
+                        <div className="result-panel-header">IPFS Result</div>
+                        <div className="result-panel-body">
+                          <CopyField label="Content Identifier (CID)" value={uploadCid} />
+                          <a className="btn btn-outline btn-sm" href={`https://gateway.pinata.cloud/ipfs/${uploadCid}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "inline-flex" }}>
+                            View on IPFS Gateway ↗
+                          </a>
+                          <div className="divider" />
+                          <button className="btn btn-blue full-width" onClick={() => { setSubmitCid(uploadCid); setActiveTab("submit"); }}>
+                            Continue to Submit →
+                          </button>
+                        </div>
+                      </div>
                   )}
                 </div>
-            )}
-          </StepCard>
+              </div>
+            </div>
 
-        </main>
+            {/* ── TAB: Submit ── */}
+            <div className={`tab-panel ${activeTab === "submit" ? "active" : ""}`}>
+              <div className="panel-card">
+                <div className="panel-header">
+                  <div className="panel-title">Submit CID to Blockchain</div>
+                  <div className="panel-desc">Your wallet signs a transaction recording the CID, your address, and an immutable timestamp on-chain.</div>
+                </div>
+                <div className="panel-body">
+                  <div className="field-group">
+                    <label className="field-label-text">Contract Address</label>
+                    <input className="field-input" placeholder="0x…" value={contractAddr} onChange={(e) => setContractAddr(e.target.value)} />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label-text">IPFS CID</label>
+                    <input className="field-input" placeholder="bafybei…" value={submitCid} onChange={(e) => setSubmitCid(e.target.value)} />
+                  </div>
+                  <button className="btn btn-gold full-width" onClick={handleSubmit} disabled={submitStatus === "loading"}>
+                    {submitStatus === "loading" ? <><span className="spinner" /> Submitting…</> : "Submit to Blockchain"}
+                  </button>
 
-        <footer className="app-footer">
-          <p>Proof of Precedence · Solidity 0.8 · Hardhat Local · IPFS via Pinata</p>
+                  <Status type={submitStatus} message={submitMsg} />
+
+                  {submitStatus === "success" && txHash && (
+                      <div className="precedence-card">
+                        <span className="precedence-icon">🔒</span>
+                        <div className="precedence-title">Precedence Established</div>
+                        <div className="precedence-sub">
+                          Your paper has been permanently registered. No one can claim an earlier on-chain submission for this document.
+                        </div>
+                        <div className="precedence-meta">
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">Transaction Hash</div>
+                            <div className="precedence-meta-value">{txHash.slice(0,20)}…</div>
+                          </div>
+                          {submitTimestamp && (
+                              <div className="precedence-meta-item">
+                                <div className="precedence-meta-label">Block Timestamp</div>
+                                <div className="precedence-meta-value">{new Date(submitTimestamp * 1000).toUTCString()}</div>
+                              </div>
+                          )}
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">IPFS CID</div>
+                            <div className="precedence-meta-value">{submitCid.slice(0,24)}…</div>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: "24px" }}>
+                          <button className="btn btn-outline" onClick={() => { setVerifyCid(submitCid); setActiveTab("verify"); }}>
+                            Verify This Paper →
+                          </button>
+                        </div>
+                      </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── TAB: Verify ── */}
+            <div className={`tab-panel ${activeTab === "verify" ? "active" : ""}`}>
+              <div className="panel-card">
+                <div className="panel-header">
+                  <div className="panel-title">Verify Proof of Precedence</div>
+                  <div className="panel-desc">Query the blockchain with any CID to retrieve the author, timestamp, and precedence status. No wallet required.</div>
+                </div>
+                <div className="panel-body">
+                  <div className="field-group">
+                    <label className="field-label-text">Contract Address</label>
+                    <input className="field-input" placeholder="0x…" value={verifyAddr} onChange={(e) => setVerifyAddr(e.target.value)} />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label-text">IPFS CID to Verify</label>
+                    <input className="field-input" placeholder="bafybei…" value={verifyCid} onChange={(e) => setVerifyCid(e.target.value)} />
+                  </div>
+                  <button className="btn btn-green full-width" onClick={handleVerify} disabled={verifyStatus === "loading"}>
+                    {verifyStatus === "loading" ? <><span className="spinner" /> Querying Blockchain…</> : "Verify on Blockchain"}
+                  </button>
+
+                  {verifyResult?.error && <Status type="error" message={verifyResult.error} />}
+
+                  {verifyResult?.exists === false && (
+                      <div className="not-registered-card">
+                        <span className="not-registered-icon">✕</span>
+                        <div className="not-registered-title">Not Registered</div>
+                        <div className="not-registered-sub">This CID has no on-chain record in this registry.</div>
+                      </div>
+                  )}
+
+                  {verifyResult?.exists === true && (
+                      <div className="precedence-card">
+                        <span className="precedence-icon">✅</span>
+                        <div className="precedence-title">Proof of Precedence Confirmed</div>
+                        <div className="precedence-sub">
+                          This paper is permanently registered on the blockchain. The record is tamper-proof and publicly verifiable.
+                        </div>
+                        <div className="precedence-meta">
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">Author Wallet</div>
+                            <div className="precedence-meta-value">{verifyResult.author}</div>
+                          </div>
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">Registered At</div>
+                            <div className="precedence-meta-value">{new Date(verifyResult.timestamp * 1000).toUTCString()}</div>
+                          </div>
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">IPFS CID</div>
+                            <div className="precedence-meta-value">{verifyResult.cid}</div>
+                          </div>
+                          <div className="precedence-meta-item">
+                            <div className="precedence-meta-label">Total Papers in Registry</div>
+                            <div className="precedence-meta-value">{verifyResult.total}</div>
+                          </div>
+                        </div>
+                      </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ══ FOOTER ══ */}
+        <footer className="footer">
+          <div className="footer-logo">Proof of Precedence</div>
+          <div className="footer-tech">
+            {["Solidity 0.8", "Hardhat", "Ethers.js v6", "React", "IPFS", "Pinata", "Polygon"].map(t => (
+                <span className="tech-tag" key={t}>{t}</span>
+            ))}
+          </div>
+          <div className="footer-copy">© 2025 · All records immutable</div>
         </footer>
+
       </div>
   );
 }
