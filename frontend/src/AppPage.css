@@ -1,0 +1,287 @@
+/* ════════════════════════════════════════════════════════════════
+   APP PAGE — clean alignment, no overlaps
+════════════════════════════════════════════════════════════════ */
+.apppage { min-height: 100vh; }
+
+/* ── Hero ────────────────────────────────────────────────────── */
+.apppage-hero {
+  position: relative; height: 52vh; min-height: 400px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; padding-top: 62px;
+}
+.apppage-hero__bg {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1800&q=80');
+  background-size: cover; background-position: center;
+  filter: brightness(0.11) saturate(0.3);
+}
+.apppage-hero__ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(3,4,7,0.25) 0%, rgba(3,4,7,1) 100%);
+}
+.apppage-hero__grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(184,146,42,0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,146,42,0.032) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+.apppage-hero__bleed {
+  position: absolute; top: 50%; left: 50%;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(16rem, 36vw, 34rem);
+  color: rgba(255,255,255,0.022); line-height: 1;
+  user-select: none; pointer-events: none; white-space: nowrap;
+}
+.apppage-hero__content {
+  position: relative; z-index: 2;
+  text-align: center; padding: 0 32px;
+}
+.apppage-hero__h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  font-weight: 600; line-height: 1.05;
+  letter-spacing: -0.025em; color: #e8edf5;
+  margin: 16px 0 14px;
+}
+.apppage-hero__h1 em { font-style: italic; }
+.apppage-hero__sub {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.9rem; font-weight: 300;
+  color: #5a6a80; max-width: 420px; margin: 0 auto; line-height: 1.7;
+}
+
+/* ── Tool container ──────────────────────────────────────────── */
+.apppage-tool {
+  max-width: 820px; margin: 0 auto;
+  padding: 56px 40px 120px;
+}
+
+/* ── Wallet strip ────────────────────────────────────────────── */
+.apppage-wallet {
+  background: #080a10;
+  border: 1px solid #1a2030;
+  border-radius: 3px; padding: 22px 28px;
+  margin-bottom: 24px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+.apppage-wallet__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.56rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #3a4a62; margin-bottom: 6px;
+}
+.apppage-wallet__addr {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem; color: #4ecba0; flex-wrap: wrap;
+}
+.apppage-wallet__dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4ecba0; box-shadow: 0 0 6px #4ecba0;
+  animation: walletBlink 2s infinite; flex-shrink: 0;
+}
+@keyframes walletBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.apppage-wallet__net {
+  font-size: 0.6rem; color: rgba(78,203,160,0.4);
+  background: rgba(78,203,160,0.08); border: 1px solid rgba(78,203,160,0.15);
+  padding: 2px 8px; border-radius: 100px;
+}
+.apppage-wallet__hint {
+  font-family: 'Cabinet Grotesk', sans-serif; font-size: 0.8rem; color: #3a4a62;
+}
+.apppage-wallet__right { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.apppage-wallet__input { width: 260px !important; flex-shrink: 1; }
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.apppage-tabs {
+  display: flex; position: relative;
+  background: #06070c; border-radius: 3px 3px 0 0;
+  overflow: hidden;
+}
+.apppage-tab {
+  flex: 1; display: flex; align-items: center;
+  justify-content: center; gap: 7px;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.78rem; font-weight: 600;
+  color: #3a4a62; background: none; border: none;
+  padding: 15px 16px; cursor: pointer;
+  transition: color 0.25s; position: relative; z-index: 1;
+  white-space: nowrap;
+}
+.apppage-tab:hover { color: #9aaabf; }
+.apppage-tab--active { color: #e8edf5; }
+.apppage-tab__n {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+  background: rgba(255,255,255,0.04); color: #2d3550;
+  padding: 1px 6px; border-radius: 100px; transition: all 0.25s;
+}
+.apppage-tab--active .apppage-tab__n { background: rgba(184,146,42,0.14); color: #b8922a; }
+.apppage-tab-bar {
+  position: absolute; bottom: 0;
+  width: 33.333%; height: 2px;
+  background: linear-gradient(to right, #b8922a, #d4aa44);
+  transition: left 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ── Panels ──────────────────────────────────────────────────── */
+.apppage-panel {
+  border-radius: 0 0 3px 3px;
+  padding: 40px 44px;
+  animation: panSlide 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes panSlide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.apppage-panel--dark  { background: #06070c; border: 1px solid #1a2030; border-top: none; }
+.apppage-panel--navy  { background: #080a12; border: 1px solid #1a2030; border-top: none; }
+.apppage-panel--light { background: #07080d; border: 1px solid #1a2030; border-top: none; }
+
+.apppage-panel__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; font-weight: 700;
+  letter-spacing: -0.02em; color: #e8edf5; margin-bottom: 6px;
+}
+.apppage-panel__title--dark { color: #1a1510; }
+.apppage-panel__desc {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.84rem; font-weight: 300;
+  color: #5a6a80; line-height: 1.7; margin-bottom: 24px;
+}
+.apppage-panel__desc--dark { color: #5a4a38; }
+
+/* ── Form fields ─────────────────────────────────────────────── */
+.apppage-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.apppage-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.56rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #4a5a72;
+}
+.apppage-label--light { color: #5a6a80; }
+
+.apppage-input {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  padding: 13px 15px; border-radius: 2px; outline: none;
+  transition: all 0.25s; background: #0a0b12;
+  border: 1px solid #1e2535; color: #e8edf5; width: 100%;
+}
+.apppage-input::placeholder { color: #2d3550; }
+.apppage-input:focus { border-color: #b8922a; background: #111520; box-shadow: 0 0 0 3px rgba(184,146,42,0.07); }
+.apppage-input--light {
+  background: #0a0b12; border-color: #1e2535; color: #e8edf5;
+}
+.apppage-input--light::placeholder { color: #2d3550; }
+.apppage-input--light:focus { border-color: #b8922a; background: #141820; box-shadow: 0 0 0 3px rgba(184,146,42,0.07); }
+
+/* ── Drop zone ───────────────────────────────────────────────── */
+.apppage-drop {
+  border: 1px dashed #1a2535; border-radius: 3px;
+  padding: 44px 24px; text-align: center; cursor: pointer;
+  background: #0a0b12; margin-bottom: 14px;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  position: relative; overflow: hidden;
+}
+.apppage-drop::after {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse at center, rgba(184,146,42,0.04) 0%, transparent 70%);
+  opacity:0; transition: opacity 0.3s;
+}
+.apppage-drop:hover,.apppage-drop--filled { border-color: #b8922a; }
+.apppage-drop:hover::after,.apppage-drop--filled::after { opacity:1; }
+.apppage-drop__icon { font-size: 1.8rem; margin-bottom: 12px; display:block; position:relative; z-index:1; }
+.apppage-drop__main { font-size:0.95rem; font-weight:600; color:#e8edf5; position:relative; z-index:1; }
+.apppage-drop__sub  { font-size:0.72rem; color:#3a4a62; margin-top:4px; position:relative; z-index:1; }
+.apppage-drop__preview {
+  display:flex; align-items:center; gap:13px; justify-content:center;
+  font-size:1.8rem; position:relative; z-index:1;
+}
+.apppage-drop__name { font-size:0.88rem; font-weight:600; color:#e8edf5; }
+.apppage-drop__size { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:#3a4a62; }
+
+/* ── Manual ──────────────────────────────────────────────────── */
+.apppage-manual { background:#0a0b12; border:1px solid #1a2030; border-radius:3px; padding:20px; margin-bottom:8px; }
+.apppage-manual__note { font-size:0.8rem; color:#5a6a80; margin-bottom:12px; line-height:1.6; }
+.apppage-manual__note a { color:#b8922a; }
+
+/* ── Result box ──────────────────────────────────────────────── */
+.apppage-result { margin-top:16px; border:1px solid #1a2030; border-radius:3px; overflow:hidden; }
+.apppage-result__hdr {
+  padding:10px 16px; background:#0a0b12;
+  font-family:'JetBrains Mono',monospace; font-size:0.56rem;
+  letter-spacing:0.16em; text-transform:uppercase; color:#3a4a62;
+  border-bottom:1px solid #0e1018;
+}
+.app-result-row { display:flex; align-items:stretch; border-bottom:1px solid #0a0b10; }
+.app-result-row:last-of-type { border-bottom:none; }
+.app-result-lbl {
+  font-family:'JetBrains Mono',monospace; font-size:0.56rem;
+  letter-spacing:0.12em; text-transform:uppercase;
+  padding:12px 14px; min-width:140px; color:#3a4a62;
+  background:#0a0b10; display:flex; align-items:center;
+  border-right:1px solid #0e1018; flex-shrink:0;
+}
+.app-result-val {
+  flex:1; display:flex; align-items:center;
+  justify-content:space-between; gap:10px;
+  padding:12px 14px; font-family:'JetBrains Mono',monospace;
+  font-size:0.72rem; color:#b8922a;
+  word-break:break-all; background:#0c0d14;
+}
+.app-copy-btn {
+  font-family:'JetBrains Mono',monospace; font-size:0.56rem;
+  letter-spacing:0.1em; text-transform:uppercase;
+  padding:4px 9px; border-radius:2px; cursor:pointer; flex-shrink:0;
+  background:none; border:1px solid #1a2535; color:#3a4a62; transition:all 0.2s;
+}
+.app-copy-btn:hover { border-color:#b8922a; color:#b8922a; }
+.apppage-result__actions {
+  padding:12px 16px; display:flex; gap:10px;
+  border-top:1px solid #0e1018; background:#0a0b12;
+}
+
+/* ── Certificate ─────────────────────────────────────────────── */
+.apppage-cert {
+  margin-top:18px;
+  background: linear-gradient(135deg, rgba(184,146,42,0.055), rgba(184,146,42,0.02));
+  border:1px solid rgba(184,146,42,0.22);
+  border-radius:3px; padding:32px 36px; text-align:center;
+}
+.apppage-cert--denied { background:rgba(192,57,43,0.07); border-color:rgba(192,57,43,0.2); }
+.apppage-cert__seal { font-size:2.4rem; margin-bottom:10px; display:block; }
+.apppage-cert__title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem; font-weight:700; color:#d4aa44; margin-bottom:7px;
+}
+.apppage-cert__sub {
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:0.8rem; color:#5a6a80; max-width:380px; margin:0 auto 20px; line-height:1.6;
+}
+.apppage-cert__grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; text-align:left; }
+.apppage-cert__item { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:2px; padding:12px 14px; }
+.apppage-cert__item-l {
+  font-family:'JetBrains Mono',monospace; font-size:0.54rem;
+  letter-spacing:0.14em; text-transform:uppercase; color:#3a4a62; margin-bottom:5px;
+}
+.apppage-cert__item-v {
+  font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+  color:#b8922a; word-break:break-all; line-height:1.4;
+}
+
+/* ── status ──────────────────────────────────────────────────── */
+[data-reveal] {
+  opacity:0;
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+[data-reveal="up"] { transform: translateY(36px); }
+[data-reveal="fade"] { transform: none; }
+[data-reveal].revealed { opacity:1; transform:none; }
+
+/* ── responsive ─────────────────────────────────────────────── */
+@media (max-width:768px) {
+  .apppage-tool { padding:32px 18px 80px; }
+  .apppage-panel { padding:24px 20px; }
+  .apppage-wallet { flex-direction:column; align-items:flex-start; }
+  .apppage-cert__grid { grid-template-columns:1fr; }
+  .apppage-tab__label { display:none; }
+  .apppage-wallet__input { width:100% !important; }
+  .apppage-wallet__right { width:100%; flex-wrap:wrap; }
+}
