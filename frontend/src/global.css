@@ -109,7 +109,6 @@ body {
   font-family:'JetBrains Mono',monospace; font-size:0.56rem;
   letter-spacing:0.18em; text-transform:uppercase; color:#4a5a72;
 }
-.label-light { color:#8a7a65; }
 .input {
   font-family:'JetBrains Mono',monospace; font-size:0.8rem;
   padding:13px 16px; border-radius:2px; outline:none; transition:all 0.25s;
@@ -117,11 +116,6 @@ body {
 }
 .input::placeholder { color:#2d3550; }
 .input:focus { border-color:#b8922a; background:#141820; box-shadow:0 0 0 3px rgba(184,146,42,0.08); }
-.input-light {
-  background:#f5f0e8; border-color:#c8bfaa; color:#1a1510;
-}
-.input-light::placeholder { color:#a09080; }
-.input-light:focus { border-color:#b8922a; background:#fff; }
 
 /* grid background */
 .tech-grid-bg {

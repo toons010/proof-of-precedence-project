@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useScrollReveal, useParallax } from "./useScrollAnimation";
+import { useScrollReveal, useParallax, useElementScroll } from "./useScrollAnimation";
+
+const ss = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
 import { ethers } from "ethers";
 import "./AppPage.css";
 
@@ -61,6 +63,11 @@ function StatusMsg({ type, msg }) {
 
 export default function AppPage({ onWalletChange }) {
   useScrollReveal();
+  const [heroRef, heroP] = useElementScroll();
+  const heroExit      = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;
+  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0;
+  const heroFade      = Math.max(heroExit, heroEnterBack);
+  const heroRetrace   = 1 - heroFade;
   const [bgRef,    bgOff]   = useParallax(0.3);
   const [bleedRef, blOff]   = useParallax(-0.07);
   const [textRef,  textOff] = useParallax(0.12);
@@ -154,7 +161,7 @@ export default function AppPage({ onWalletChange }) {
     <div className="apppage page-enter">
 
       {/* ── Hero banner ── */}
-      <section className="apppage-hero">
+      <section className="apppage-hero" ref={heroRef}>
         <div ref={bgRef} className="apppage-hero__bg"
           style={{ transform: `translateY(${bgOff}px) scale(1.15)` }} />
         <div className="apppage-hero__ov"/>
@@ -165,11 +172,16 @@ export default function AppPage({ onWalletChange }) {
         {/* Text at medium parallax */}
         <div ref={textRef} className="apppage-hero__content"
           style={{ transform: `translateY(${textOff}px)` }}>
-          <div className="eyebrow" data-reveal="fade">The Application</div>
-          <h1 className="apppage-hero__h1" data-reveal="up" data-reveal-delay="80">
+          <div className="eyebrow"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*-40}px)` } : undefined }>
+            The Application
+          </div>
+          <h1 className="apppage-hero__h1"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*60}px)` } : undefined }>
             Register or verify<br /><em className="gold-text">your paper.</em>
           </h1>
-          <p className="apppage-hero__sub" data-reveal="fade" data-reveal-delay="180">
+          <p className="apppage-hero__sub"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*40}px)` } : undefined }>
             Three steps. Upload to IPFS, submit to blockchain, verify on-chain.
             No MetaMask required.
           </p>
@@ -307,14 +319,14 @@ export default function AppPage({ onWalletChange }) {
 
         {/* ── Verify ── */}
         {tab==="verify" && (
-          <div className="apppage-panel apppage-panel--light">
+          <div className="apppage-panel apppage-panel--navy">
             <h2 className="apppage-panel__title">Verify Proof of Precedence</h2>
             <p className="apppage-panel__desc">Query the blockchain with any CID. Read-only — no wallet, no gas, no cost. Anyone can verify.</p>
 
-            <div className="apppage-field"><label className="apppage-label apppage-label--light">Contract Address</label>
-              <input className="input input-light" placeholder="0x…" value={vAddr} onChange={e=>setVAddr(e.target.value)}/></div>
-            <div className="apppage-field"><label className="apppage-label apppage-label--light">IPFS CID to Verify</label>
-              <input className="input input-light" placeholder="bafybei…" value={vCid} onChange={e=>setVCid(e.target.value)}/></div>
+            <div className="apppage-field"><label className="apppage-wallet__label">Contract Address</label>
+              <input className="apppage-input" placeholder="0x…" value={vAddr} onChange={e=>setVAddr(e.target.value)}/></div>
+            <div className="apppage-field"><label className="apppage-wallet__label">IPFS CID to Verify</label>
+              <input className="apppage-input" placeholder="bafybei…" value={vCid} onChange={e=>setVCid(e.target.value)}/></div>
 
             <button className="btn btn-teal btn-full" onClick={doVerify} disabled={vSt==="loading"}>
               {vSt==="loading"?<><Spin/><span>Querying…</span></>:"Verify on Blockchain"}

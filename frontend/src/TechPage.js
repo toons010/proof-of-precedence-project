@@ -340,10 +340,11 @@ export function TechPage({ navigate }) {
   const [bgRef,    bgOff]   = useParallax(0.3);
   const [bleedRef, blOff]   = useParallax(-0.08);
   const [textRef,  textOff] = useParallax(0.12);
-  const [heroRef,  heroP]   = useElP();
-  const heroEyeP = ss(heroP, 0.02, 0.18);
-  const heroH1P  = ss(heroP, 0.06, 0.24);
-  const heroSubP = ss(heroP, 0.12, 0.30);
+  const [heroRef, heroP]  = useElP();
+  const heroExit      = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;
+  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0;
+  const heroFade      = Math.max(heroExit, heroEnterBack);
+  const heroRetrace   = 1 - heroFade;
   const go = (pg) => { navigate(pg); window.scrollTo({ top: 0 }); };
 
   return (
@@ -361,20 +362,19 @@ export function TechPage({ navigate }) {
         </div>
         <div ref={textRef} className="tech-hero__content"
           style={{ transform: `translateY(${textOff}px)` }}>
-          <div style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
-            <div className="eyebrow">Under the Hood</div>
+          <div className="eyebrow"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*-40}px)` } : undefined }>
+            Under the Hood
           </div>
-          <div style={{ opacity: heroH1P, transform: `translateY(${(1-heroH1P)*90}px) scale(${0.92+heroH1P*0.08})` }}>
-            <h1 className="tech-hero__h1">
-              Built on proven<br /><em className="gold-text">cryptography.</em>
-            </h1>
-          </div>
-          <div style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
-            <p className="tech-hero__sub">
-              Every component relies on well-established cryptographic primitives —
-              nothing proprietary, nothing trusted, nothing that can be taken away.
-            </p>
-          </div>
+          <h1 className="tech-hero__h1"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*60}px)` } : undefined }>
+            Built on proven<br /><em className="gold-text">cryptography.</em>
+          </h1>
+          <p className="tech-hero__sub"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*40}px)` } : undefined }>
+            Every component relies on well-established cryptographic primitives —
+            nothing proprietary, nothing trusted, nothing that can be taken away.
+          </p>
         </div>
       </section>
 

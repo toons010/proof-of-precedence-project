@@ -205,12 +205,13 @@ export default function Home({ navigate }) {
   const [textRef,  txOff]   = useParallax(0.10);
   const [codeRef,  codeOff] = useParallax(-0.08);
   const [heroRef,  heroP]   = useElementScroll();
-  const heroEyeP = ss(heroP, 0.01, 0.14);
-  const heroH1aP = ss(heroP, 0.04, 0.18);
-  const heroH1bP = ss(heroP, 0.07, 0.22);
-  const heroH1cP = ss(heroP, 0.10, 0.26);
-  const heroSubP = ss(heroP, 0.14, 0.30);
-  const heroBtnP = ss(heroP, 0.18, 0.34);
+  // Only apply retrace when hero is scrolling OUT (heroP > 0.7 = user scrolled down past hero)
+  // or scrolling BACK UP (heroP < 0.35 = hero re-entering from top)
+  // In middle range (0.35-0.7) = hero is in view, CSS animation handles entrance
+  const heroExit = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;   // 0→1 as hero exits upward
+  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0; // 0→1 as hero comes back from top
+  const heroFade = Math.max(heroExit, heroEnterBack);  // combined: fade out when out of center
+  const heroRetrace = 1 - heroFade;  // 1 = fully visible, 0 = invisible
 
   const go = (p) => { navigate(p); window.scrollTo({ top: 0 }); };
 
@@ -263,32 +264,26 @@ export default function Home({ navigate }) {
         {/* Main content — parallaxes at half speed */}
         <div ref={textRef} className="h-hero__content"
           style={{ transform: `translateY(${txOff}px)` }}>
+          {/* Eyebrow, h1, sub, btns: CSS animation handles entrance on load,
+              inline style handles retrace when user scrolls away and back */}
           <div className="h-hero__eyebrow"
-            style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroExit > heroEnterBack ? heroFade*-60 : heroFade*60}px)` } : undefined }>
             <span className="h-hero__dot" />
             Blockchain · IPFS · Solidity · Academic Priority
           </div>
-          <h1 className="h-hero__h1">
-            <span className="h-hero__h1a"
-              style={{ opacity: heroH1aP, transform: `translateY(${(1-heroH1aP)*80}px)` }}>
-              Establish
-            </span>
-            <span className="h-hero__h1b"
-              style={{ opacity: heroH1bP, transform: `translateY(${(1-heroH1bP)*100}px) scale(${0.9+heroH1bP*0.1})` }}>
-              Your <em>Research</em>
-            </span>
-            <span className="h-hero__h1c"
-              style={{ opacity: heroH1cP, transform: `translateY(${(1-heroH1cP)*80}px)` }}>
-              Priority.
-            </span>
+          <h1 className="h-hero__h1"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroExit > heroEnterBack ? heroFade*-40 : heroFade*40}px)` } : undefined }>
+            <span className="h-hero__h1a">Establish</span>
+            <span className="h-hero__h1b">Your <em>Research</em></span>
+            <span className="h-hero__h1c">Priority.</span>
           </h1>
           <p className="h-hero__sub"
-            style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroExit > heroEnterBack ? heroFade*-30 : heroFade*50}px)` } : undefined }>
             The world's first decentralised academic authorship system.
             Your paper, timestamped forever — no institution, no intermediary.
           </p>
           <div className="h-hero__btns"
-            style={{ opacity: heroBtnP, transform: `translateY(${(1-heroBtnP)*50}px)` }}>
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroExit > heroEnterBack ? heroFade*-20 : heroFade*40}px)` } : undefined }>
             <button className="btn btn-gold" onClick={() => go("app")}>
               <span>Register a Paper</span>
               <span className="h-hero__arr">→</span>
