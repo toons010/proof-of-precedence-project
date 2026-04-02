@@ -204,6 +204,13 @@ export default function Home({ navigate }) {
   const [bleedRef, blOff]   = useParallax(-0.06);
   const [textRef,  txOff]   = useParallax(0.10);
   const [codeRef,  codeOff] = useParallax(-0.08);
+  const [heroRef,  heroP]   = useElementScroll();
+  const heroEyeP = ss(heroP, 0.01, 0.14);
+  const heroH1aP = ss(heroP, 0.04, 0.18);
+  const heroH1bP = ss(heroP, 0.07, 0.22);
+  const heroH1cP = ss(heroP, 0.10, 0.26);
+  const heroSubP = ss(heroP, 0.14, 0.30);
+  const heroBtnP = ss(heroP, 0.18, 0.34);
 
   const go = (p) => { navigate(p); window.scrollTo({ top: 0 }); };
 
@@ -211,7 +218,7 @@ export default function Home({ navigate }) {
     <div className="home">
 
       {/* ══ HERO ══ */}
-      <section className="h-hero">
+      <section className="h-hero" ref={heroRef}>
         {/* Background parallax — moves slower than scroll */}
         <div ref={bgRef} className="h-hero__bg"
           style={{ transform: `translateY(${bgOff}px) scale(1.2)` }} />
@@ -256,20 +263,32 @@ export default function Home({ navigate }) {
         {/* Main content — parallaxes at half speed */}
         <div ref={textRef} className="h-hero__content"
           style={{ transform: `translateY(${txOff}px)` }}>
-          <div className="h-hero__eyebrow" data-reveal="fade">
+          <div className="h-hero__eyebrow"
+            style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
             <span className="h-hero__dot" />
             Blockchain · IPFS · Solidity · Academic Priority
           </div>
           <h1 className="h-hero__h1">
-            <span className="h-hero__h1a" data-reveal="up" data-reveal-delay="0">Establish</span>
-            <span className="h-hero__h1b" data-reveal="up" data-reveal-delay="80">Your <em>Research</em></span>
-            <span className="h-hero__h1c" data-reveal="up" data-reveal-delay="160">Priority.</span>
+            <span className="h-hero__h1a"
+              style={{ opacity: heroH1aP, transform: `translateY(${(1-heroH1aP)*80}px)` }}>
+              Establish
+            </span>
+            <span className="h-hero__h1b"
+              style={{ opacity: heroH1bP, transform: `translateY(${(1-heroH1bP)*100}px) scale(${0.9+heroH1bP*0.1})` }}>
+              Your <em>Research</em>
+            </span>
+            <span className="h-hero__h1c"
+              style={{ opacity: heroH1cP, transform: `translateY(${(1-heroH1cP)*80}px)` }}>
+              Priority.
+            </span>
           </h1>
-          <p className="h-hero__sub" data-reveal="fade" data-reveal-delay="240">
+          <p className="h-hero__sub"
+            style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
             The world's first decentralised academic authorship system.
             Your paper, timestamped forever — no institution, no intermediary.
           </p>
-          <div className="h-hero__btns" data-reveal="fade" data-reveal-delay="320">
+          <div className="h-hero__btns"
+            style={{ opacity: heroBtnP, transform: `translateY(${(1-heroBtnP)*50}px)` }}>
             <button className="btn btn-gold" onClick={() => go("app")}>
               <span>Register a Paper</span>
               <span className="h-hero__arr">→</span>

@@ -120,10 +120,7 @@
   background: rgba(184,146,42,0.04);
   padding: 7px 18px; border-radius: 2px;
   margin-bottom: 40px;
-  opacity: 0;
-  transition: opacity 0.8s, transform 0.8s;
 }
-.h-hero__eyebrow.revealed { opacity: 1; }
 
 .h-hero__dot {
   width: 5px; height: 5px;
@@ -144,12 +141,6 @@
 .h-hero__h1a, .h-hero__h1b, .h-hero__h1c {
   display: block;
   color: #e8edf5;
-  opacity: 0;
-  transform: translateY(36px);
-  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
-}
-.h-hero__h1a.revealed, .h-hero__h1b.revealed, .h-hero__h1c.revealed {
-  opacity: 1; transform: translateY(0);
 }
 
 .h-hero__h1a { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 300; }
@@ -171,17 +162,11 @@
   color: rgba(154,170,191,0.85);
   max-width: 440px; margin: 0 auto 44px;
   line-height: 1.8;
-  opacity: 0;
-  transition: opacity 0.8s, transform 0.8s;
-  transform: translateY(20px);
 }
-.h-hero__sub.revealed { opacity: 1; transform: translateY(0); }
 
 .h-hero__btns {
   display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-  opacity: 0; transition: opacity 0.8s;
 }
-.h-hero__btns.revealed { opacity: 1; }
 
 .h-hero__arr { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
 .btn-gold:hover .h-hero__arr { transform: translateX(6px); }
@@ -498,21 +483,7 @@
 }
 .h-cta__btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* ── reveal states ──────────────────────────────────────────── */
-[data-reveal] {
-  opacity: 0;
-  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
-}
-[data-reveal="up"]    { transform: translateY(40px); }
-[data-reveal="left"]  { transform: translateX(-40px); }
-[data-reveal="right"] { transform: translateX(40px); }
-[data-reveal="fade"]  { transform: none; }
 
-[data-reveal].revealed {
-  opacity: 1;
-  transform: none;
-}
-/* reverse on scroll-up: remove class → original state */
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1100px) { .h-hero__code { display: none; } .h-hero__content { margin-right: 0; } }

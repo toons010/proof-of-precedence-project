@@ -312,19 +312,45 @@ function ArchSection() {
   );
 }
 
+
+/* ── CTA section with inline scroll ── */
+function TechCtaSection({ go }) {
+  const [ref, p] = useElP();
+  const h2P  = ss(p, 0.06, 0.36);
+  const btnP = ss(p, 0.18, 0.48);
+  return (
+    <section className="tech-cta" ref={ref}>
+      <div className="tech-cta__inner">
+        <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*100}px) scale(${0.9+h2P*0.1})` }}>
+          <h2 className="tech-cta__h2">Now that you know how it's built —</h2>
+        </div>
+        <div style={{ opacity: btnP, transform: `translateY(${(1-btnP)*60}px)` }}
+          className="tech-cta__btns">
+          <button className="btn btn-gold" onClick={() => go("app")}><span>Launch the App →</span></button>
+          <button className="btn btn-ghost" onClick={() => go("how")}>Review How It Works</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════════ */
 export function TechPage({ navigate }) {
   useScrollReveal(0.12);
-  const [bgRef,   bgOff]   = useParallax(0.3);
-  const [bleedRef, blOff]  = useParallax(-0.08);
+  const [bgRef,    bgOff]   = useParallax(0.3);
+  const [bleedRef, blOff]   = useParallax(-0.08);
   const [textRef,  textOff] = useParallax(0.12);
+  const [heroRef,  heroP]   = useElP();
+  const heroEyeP = ss(heroP, 0.02, 0.18);
+  const heroH1P  = ss(heroP, 0.06, 0.24);
+  const heroSubP = ss(heroP, 0.12, 0.30);
   const go = (pg) => { navigate(pg); window.scrollTo({ top: 0 }); };
 
   return (
     <div className="tech page-enter">
 
       {/* ── Hero ── */}
-      <section className="tech-hero">
+      <section className="tech-hero" ref={heroRef}>
         <div ref={bgRef} className="tech-hero__bg"
           style={{ transform: `translateY(${bgOff}px) scale(1.15)` }} />
         <div className="tech-hero__ov" />
@@ -335,14 +361,20 @@ export function TechPage({ navigate }) {
         </div>
         <div ref={textRef} className="tech-hero__content"
           style={{ transform: `translateY(${textOff}px)` }}>
-          <div className="eyebrow" data-reveal="fade">Under the Hood</div>
-          <h1 className="tech-hero__h1" data-reveal="up" data-reveal-delay="80">
-            Built on proven<br /><em className="gold-text">cryptography.</em>
-          </h1>
-          <p className="tech-hero__sub" data-reveal="fade" data-reveal-delay="180">
-            Every component relies on well-established cryptographic primitives —
-            nothing proprietary, nothing trusted, nothing that can be taken away.
-          </p>
+          <div style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
+            <div className="eyebrow">Under the Hood</div>
+          </div>
+          <div style={{ opacity: heroH1P, transform: `translateY(${(1-heroH1P)*90}px) scale(${0.92+heroH1P*0.08})` }}>
+            <h1 className="tech-hero__h1">
+              Built on proven<br /><em className="gold-text">cryptography.</em>
+            </h1>
+          </div>
+          <div style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
+            <p className="tech-hero__sub">
+              Every component relies on well-established cryptographic primitives —
+              nothing proprietary, nothing trusted, nothing that can be taken away.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -351,19 +383,7 @@ export function TechPage({ navigate }) {
       <ArchSection />
 
       {/* ── CTA ── */}
-      <section className="tech-cta">
-        <div className="tech-cta__inner" data-reveal="up">
-          <h2 className="tech-cta__h2">Now that you know how it's built —</h2>
-          <div className="tech-cta__btns">
-            <button className="btn btn-gold" onClick={() => go("app")}>
-              <span>Launch the App →</span>
-            </button>
-            <button className="btn btn-ghost" onClick={() => go("how")}>
-              Review How It Works
-            </button>
-          </div>
-        </div>
-      </section>
+      <TechCtaSection go={go} />
 
     </div>
   );
