@@ -255,13 +255,18 @@ export default function HowItWorks({ navigate }) {
   const [bgRef,    bgOff]   = useParallax(0.32);
   const [bleedRef, blOff]   = useParallax(-0.10);
   const [textRef,  textOff] = useParallax(0.13);
+  // Hero section scroll progress for inline bidirectional text animation
+  const [heroRef, heroP] = useElP();
+  const heroEyeP  = ss(heroP, 0.02, 0.18);
+  const heroH1P   = ss(heroP, 0.06, 0.24);
+  const heroSubP  = ss(heroP, 0.12, 0.30);
   const go = (pg) => { navigate(pg); window.scrollTo({ top: 0 }); };
 
   return (
     <div className="hiw">
 
       {/* ── Hero ── */}
-      <section className="hiw-hero">
+      <section className="hiw-hero" ref={heroRef}>
         <div ref={bgRef} className="hiw-hero__bg"
           style={{ transform: `translateY(${bgOff}px) scale(1.18)` }} />
         <div className="hiw-hero__ov" />
@@ -272,13 +277,19 @@ export default function HowItWorks({ navigate }) {
         </div>
         <div ref={textRef} className="hiw-hero__content"
           style={{ transform: `translateY(${textOff}px)` }}>
-          <div className="eyebrow" data-reveal="fade" data-reveal-delay="0">The Process</div>
-          <h1 className="hiw-hero__h1" data-reveal="up" data-reveal-delay="100">
-            Three steps.<br /><em className="gold-text">Permanent proof.</em>
-          </h1>
-          <p className="hiw-hero__sub" data-reveal="fade" data-reveal-delay="220">
-            From raw PDF to immutable blockchain record — here's exactly what happens at every stage.
-          </p>
+          <div style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
+            <div className="eyebrow">The Process</div>
+          </div>
+          <div style={{ opacity: heroH1P, transform: `translateY(${(1-heroH1P)*90}px) scale(${0.92+heroH1P*0.08})` }}>
+            <h1 className="hiw-hero__h1">
+              Three steps.<br /><em className="gold-text">Permanent proof.</em>
+            </h1>
+          </div>
+          <div style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
+            <p className="hiw-hero__sub">
+              From raw PDF to immutable blockchain record — here's exactly what happens at every stage.
+            </p>
+          </div>
         </div>
         <div className="hiw-hero__stats">
           {[{ v: "3", l: "Steps" }, { v: "SHA-256", l: "Hashing" }, { v: "EVM", l: "Execution" }, { v: "0 Gas", l: "To Verify" }].map(({ v, l }) => (

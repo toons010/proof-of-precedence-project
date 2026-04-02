@@ -130,3 +130,14 @@ body {
     linear-gradient(90deg, rgba(184,146,42,0.032) 1px, transparent 1px);
   background-size: 72px 72px;
 }
+
+/* ── Bidirectional reveal (for sections using IntersectionObserver) ── */
+[data-reveal] {
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
+}
+[data-reveal="up"]   { transform: translateY(80px); }
+[data-reveal="left"] { transform: translateX(-80px); }
+[data-reveal="right"]{ transform: translateX(80px); }
+[data-reveal="fade"] { transform: none; }
+[data-reveal].revealed { opacity: 1; transform: none; }
