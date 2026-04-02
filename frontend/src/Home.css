@@ -120,6 +120,7 @@
   background: rgba(184,146,42,0.04);
   padding: 7px 18px; border-radius: 2px;
   margin-bottom: 40px;
+  animation: riseA 0.9s 0.1s cubic-bezier(0.16,1,0.3,1) both;
 }
 
 .h-hero__dot {
@@ -142,10 +143,9 @@
   display: block;
   color: #e8edf5;
 }
-
-.h-hero__h1a { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 300; }
-.h-hero__h1b { font-size: clamp(3.5rem, 9vw, 8rem); font-weight: 600; }
-.h-hero__h1c { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 300; }
+.h-hero__h1a { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 300; animation: riseA      0.9s 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+.h-hero__h1b { font-size: clamp(3.5rem, 9vw, 8rem); font-weight: 600; animation: riseAScale 0.9s 0.38s cubic-bezier(0.16,1,0.3,1) both; }
+.h-hero__h1c { font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 300; animation: riseA      0.9s 0.50s cubic-bezier(0.16,1,0.3,1) both; }
 
 .h-hero__h1b em {
   font-style: italic;
@@ -162,10 +162,12 @@
   color: rgba(154,170,191,0.85);
   max-width: 440px; margin: 0 auto 44px;
   line-height: 1.8;
+  animation: riseA 0.9s 0.62s cubic-bezier(0.16,1,0.3,1) both;
 }
 
 .h-hero__btns {
   display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: riseA 0.9s 0.76s cubic-bezier(0.16,1,0.3,1) both;
 }
 
 .h-hero__arr { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
@@ -498,4 +500,18 @@
   .h-trust__grid { grid-template-columns: repeat(2,1fr); }
   .h-trust { padding: 80px 24px; }
   .h-cta { padding: 100px 24px; }
+}
+
+/* ── Hero entrance keyframes ── */
+@keyframes riseA {
+  from { opacity: 0; transform: translateY(80px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes riseAScale {
+  from { opacity: 0; transform: translateY(100px) scale(0.90); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeA {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

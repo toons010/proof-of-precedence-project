@@ -255,11 +255,12 @@ export default function HowItWorks({ navigate }) {
   const [bgRef,    bgOff]   = useParallax(0.32);
   const [bleedRef, blOff]   = useParallax(-0.10);
   const [textRef,  textOff] = useParallax(0.13);
-  // Hero section scroll progress for inline bidirectional text animation
+  // Hero: CSS animation handles entrance, scroll retrace handles exit
   const [heroRef, heroP] = useElP();
-  const heroEyeP  = ss(heroP, 0.02, 0.18);
-  const heroH1P   = ss(heroP, 0.06, 0.24);
-  const heroSubP  = ss(heroP, 0.12, 0.30);
+  const heroExit      = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;
+  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0;
+  const heroFade      = Math.max(heroExit, heroEnterBack);
+  const heroRetrace   = 1 - heroFade;
   const go = (pg) => { navigate(pg); window.scrollTo({ top: 0 }); };
 
   return (
@@ -277,19 +278,18 @@ export default function HowItWorks({ navigate }) {
         </div>
         <div ref={textRef} className="hiw-hero__content"
           style={{ transform: `translateY(${textOff}px)` }}>
-          <div style={{ opacity: heroEyeP, transform: `translateY(${(1-heroEyeP)*60}px)` }}>
-            <div className="eyebrow">The Process</div>
+          <div className="eyebrow"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*-40}px)` } : undefined }>
+            The Process
           </div>
-          <div style={{ opacity: heroH1P, transform: `translateY(${(1-heroH1P)*90}px) scale(${0.92+heroH1P*0.08})` }}>
-            <h1 className="hiw-hero__h1">
-              Three steps.<br /><em className="gold-text">Permanent proof.</em>
-            </h1>
-          </div>
-          <div style={{ opacity: heroSubP, transform: `translateY(${(1-heroSubP)*70}px)` }}>
-            <p className="hiw-hero__sub">
-              From raw PDF to immutable blockchain record — here's exactly what happens at every stage.
-            </p>
-          </div>
+          <h1 className="hiw-hero__h1"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*60}px)` } : undefined }>
+            Three steps.<br /><em className="gold-text">Permanent proof.</em>
+          </h1>
+          <p className="hiw-hero__sub"
+            style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*40}px)` } : undefined }>
+            From raw PDF to immutable blockchain record — here's exactly what happens at every stage.
+          </p>
         </div>
         <div className="hiw-hero__stats">
           {[{ v: "3", l: "Steps" }, { v: "SHA-256", l: "Hashing" }, { v: "EVM", l: "Execution" }, { v: "0 Gas", l: "To Verify" }].map(({ v, l }) => (
