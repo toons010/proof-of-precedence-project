@@ -348,10 +348,8 @@
   background: #09090f; cursor: pointer;
   display: flex; flex-direction: column;
   transition: background 0.3s;
-  opacity: 0; transform: translateY(40px);
-  transition: background 0.3s, opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  will-change: transform, opacity;
 }
-.h-card.revealed { opacity: 1; transform: translateY(0); }
 .h-card:hover { background: #0e0f18; }
 
 .h-card__img-wrap { position: relative; height: 240px; overflow: hidden; }
@@ -426,10 +424,8 @@
 .h-trust-item {
   background: #07080d; padding: 36px 26px;
   transition: background 0.3s; position: relative;
-  opacity: 0; transform: translateY(32px);
-  transition: background 0.3s, opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  will-change: transform, opacity;
 }
-.h-trust-item.revealed { opacity: 1; transform: translateY(0); }
 .h-trust-item::before {
   content: ''; position: absolute; top: 0; left: 0;
   width: 2px; height: 0;
