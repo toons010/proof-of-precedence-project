@@ -20,6 +20,11 @@ function useElP() {
   return [ref, p];
 }
 
+function prog(p, eA, eB, xA, xB) {
+  return Math.max(0, ss(p, eA, eB) - ss(p, xA, xB));
+}
+
+
 const CONTRACT_CODE = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
@@ -113,11 +118,9 @@ const techCards = [
 /* ── Contract section ── */
 function ContractSection() {
   const [ref, p] = useElP();
-  const entered = ss(p, 0.1, 0.4);
-  const exiting = ss(p, 0.65, 0.9);
-  const prog    = entered - exiting;
-  const leftX   = (1 - prog) * -80;
-  const rightX  = (1 - prog) * 80;
+  const pr    = prog(p, 0.08, 0.38, 0.52, 0.84);
+  const leftX = (1 - pr) * -200;
+  const rightX= (1 - pr) * 200;
 
   return (
     <section className="tech-contract" ref={ref}>
@@ -129,23 +132,23 @@ function ContractSection() {
 
         {/* Left — text slides from left, each line staggers in */}
         <div className="tech-contract__left"
-          style={{ transform: `translateX(${leftX}px)` }}>
-          <div style={{ opacity: ss(prog, 0.0, 0.3), transform: `translateY(${(1 - ss(prog, 0.0, 0.3)) * 90}px)` }}>
+          style={{ transform: `translateX(${leftX}px)`, opacity: pr }}>
+          <div style={{ opacity: ss(p,0.08,0.28), transform: `translateY(${(1-ss(p,0.08,0.28))*120}px)` }}>
             <div className="eyebrow">The Smart Contract</div>
           </div>
-          <div style={{ opacity: ss(prog, 0.1, 0.45), transform: `translateY(${(1 - ss(prog, 0.1, 0.45)) * 110}px) scale(${0.88 + ss(prog, 0.1, 0.45) * 0.12})` }}>
+          <div style={{ opacity: ss(p,0.12,0.36), transform: `translateY(${(1-ss(p,0.12,0.36))*140}px) scale(${0.84+ss(p,0.12,0.36)*0.16})` }}>
             <h2 className="tech-contract__h2">
               PaperRegistry.sol —<br />the entire system<br />
               <em className="gold-text">in 50 lines.</em>
             </h2>
           </div>
-          <div style={{ opacity: ss(prog, 0.2, 0.5), transform: `translateY(${(1 - ss(prog, 0.2, 0.5)) * 80}px)` }}>
+          <div style={{ opacity: ss(p,0.16,0.40), transform: `translateY(${(1-ss(p,0.16,0.40))*100}px)` }}>
             <p className="tech-contract__desc">
               No owner. No admin. No backdoor. Once deployed, this contract
               runs exactly as written, forever. The code is the only authority.
             </p>
           </div>
-          <div style={{ opacity: ss(prog, 0.3, 0.6), transform: `translateY(${(1 - ss(prog, 0.3, 0.6)) * 60}px)` }}>
+          <div style={{ opacity: ss(p,0.20,0.44), transform: `translateY(${(1-ss(p,0.20,0.44))*80}px)` }}>
             <div className="tech-contract__stats">
               {[
                 { v: "50", l: "Lines of Solidity" },
@@ -164,7 +167,7 @@ function ContractSection() {
 
         {/* Right — code panel slides from right */}
         <div className="tech-contract__right"
-          style={{ transform: `translateX(${rightX}px)`, opacity: ss(prog, 0.1, 0.45) }}>
+          style={{ transform: `translateX(${rightX}px)`, opacity: pr }}>
           <div className="tech-contract__code-wrap">
             <div className="tech-contract__code-bar">
               <span style={{ background: "#e05252" }} />
@@ -184,26 +187,23 @@ function ContractSection() {
 /* ── Cards section ── */
 function CardsSection() {
   const [ref, p] = useElP();
-  const eyebrowP = ss(p, 0.04, 0.28);
-  const h2P      = ss(p, 0.13, 0.40);
+  const pr = prog(p, 0.04, 0.34, 0.52, 0.84);
 
   return (
     <section className="tech-cards" ref={ref}>
       <div className="tech-cards__inner">
         <div>
-          <div style={{ opacity: eyebrowP, transform: `translateY(${(1 - eyebrowP) * 100}px)` }}>
+          <div style={{ opacity: pr, transform: `translateY(${(1-pr)*180}px)` }}>
             <div className="eyebrow">The Stack</div>
           </div>
-          <div style={{ opacity: h2P, transform: `translateY(${(1 - h2P) * 120}px) scale(${0.9 + h2P * 0.1})` }}>
+          <div style={{ opacity: pr, transform: `translateY(${(1-pr)*200}px) scale(${0.78+pr*0.22})` }}>
             <h2 className="tech-cards__h2">Every component explained.</h2>
           </div>
         </div>
         <div className="tech-cards__grid">
           {techCards.map((card, i) => {
-            const delay   = i * 0.06;
-            const entered = ss(p, 0.12 + delay, 0.38 + delay);
-            const exiting = ss(p, 0.70, 0.92);
-            const prog    = entered - exiting;
+            const delay = i * 0.06;
+            const cp = Math.max(0, ss(p, 0.10+delay, 0.36+delay) - ss(p, 0.52, 0.84));
             const fromLeft = i % 2 === 0;
             return (
               <div
@@ -211,8 +211,8 @@ function CardsSection() {
                 key={card.title}
                 style={{
                   "--a": card.accent,
-                  opacity: 0.04 + prog * 0.96,
-                  transform: `translateX(${(1 - prog) * (fromLeft ? -40 : 40)}px) translateY(${(1 - prog) * 20}px)`,
+                  opacity: cp,
+                  transform: `translateX(${(1 - cp) * (fromLeft ? -180 : 180)}px) translateY(${(1 - cp) * 80}px)`,
                 }}
               >
                 <div className="tech-card__img-wrap">
@@ -220,7 +220,7 @@ function CardsSection() {
                     src={card.img} alt={card.title}
                     className="tech-card__img" loading="lazy"
                     style={{
-                      transform: `translateY(${(p - 0.5) * -20}px) scale(${1.06 + (1 - prog) * 0.22})`,
+                      transform: `translateY(${(p - 0.5) * -20}px) scale(${1.06 + (1 - cp) * 0.30})`,
                       filter: `brightness(${0.4 + prog * 0.25}) saturate(${0.55 + prog * 0.35})`,
                     }}
                   />
@@ -256,11 +256,7 @@ function CardsSection() {
 /* ── Architecture section ── */
 function ArchSection() {
   const [ref, p] = useElP();
-  const entered  = ss(p, 0.05, 0.42);
-  const exiting  = ss(p, 0.65, 0.92);
-  const prog     = entered - exiting;
-  const eyebrowP = ss(prog, 0.00, 0.32);
-  const h2P      = ss(prog, 0.10, 0.42);
+  const pr = prog(p, 0.06, 0.38, 0.52, 0.84);
   const layers = [
     { layer: "Frontend",   items: ["React App", "ethers.js v6", "Pinata SDK"],                color: "#b8922a" },
     { layer: "Blockchain", items: ["Hardhat Node / Polygon", "PaperRegistry.sol", "EVM"],     color: "#3d7fff" },
@@ -275,21 +271,21 @@ function ArchSection() {
       </div>
       <div className="tech-arch__inner">
         <div>
-          <div style={{ opacity: eyebrowP, transform: `translateY(${(1 - eyebrowP) * 100}px)` }}>
+          <div style={{ opacity: pr, transform: `translateY(${(1-pr)*180}px)` }}>
             <div className="eyebrow">Architecture</div>
           </div>
-          <div style={{ opacity: h2P, transform: `translateY(${(1 - h2P) * 120}px) scale(${0.9 + h2P * 0.1})` }}>
+          <div style={{ opacity: pr, transform: `translateY(${(1-pr)*200}px) scale(${0.78+pr*0.22})` }}>
             <h2 className="tech-arch__h2">How all the parts connect.</h2>
           </div>
         </div>
         <div className="tech-arch__diagram">
           {layers.map(({ layer, items, color }, i) => {
-            const lp = ss(prog, 0.18 + i * 0.08, 0.48 + i * 0.08);
+            const lp = ss(p, 0.14 + i*0.08, 0.42 + i*0.08) - ss(p, 0.54, 0.84);
             return (
               <div
                 className="tech-arch__layer"
                 key={layer}
-                style={{ "--c": color, opacity: lp, transform: `translateY(${(1 - lp) * 40}px)` }}
+                style={{ "--c": color, opacity: Math.max(0,lp), transform: `translateY(${(1-Math.max(0,lp))*120}px) scale(${0.88+Math.max(0,lp)*0.12})` }}
               >
                 <div className="tech-arch__layer-label">{layer}</div>
                 <div className="tech-arch__layer-items">
@@ -298,8 +294,8 @@ function ArchSection() {
                       className="tech-arch__item"
                       key={item}
                       style={{
-                        opacity: ss(lp, j * 0.2, j * 0.2 + 0.5),
-                        transform: `translateX(${(1 - ss(lp, j * 0.2, j * 0.2 + 0.5)) * 20}px)`,
+                        opacity: Math.max(0, lp),
+                        transform: `translateX(${(1 - Math.max(0,lp)) * 30}px)`,
                       }}
                     >
                       {item}
@@ -319,11 +315,8 @@ function ArchSection() {
 /* ── CTA section with inline scroll ── */
 function TechCtaSection({ go }) {
   const [ref, p] = useElP();
-  const entered = ss(p, 0.06, 0.44);
-  const exiting = ss(p, 0.68, 0.94);
-  const prog    = entered - exiting;
-  const h2P  = ss(prog, 0.00, 0.40);
-  const btnP = ss(prog, 0.15, 0.55);
+  const h2P  = prog(p, 0.06, 0.32, 0.52, 0.82);
+  const btnP = prog(p, 0.14, 0.40, 0.52, 0.82);
   return (
     <section className="tech-cta" ref={ref}>
       <div className="tech-cta__inner">
