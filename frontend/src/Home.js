@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useScrollReveal, useParallax, useElementScroll } from "./useScrollAnimation";
 import "./Home.css";
+
 const ss = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
 
 /* ── bidirectional element scroll progress 0→1 ── */
@@ -20,19 +21,18 @@ function useElP() {
   return [ref, p];
 }
 
-/* ── Problem section with full bidirectional parallax ── */
+/* ═══════════════════════════════════════════════════════════════
+   PROBLEM SECTION — left/right slide + full reversal
+═══════════════════════════════════════════════════════════════ */
 function ProblemSection() {
   const [secRef, p] = useElP();
-  // smoothstep within [a,b]
-  const s = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
-  const entered  = s(p, 0.15, 0.45);   // 0→1 as enters
-  const exiting  = s(p, 0.60, 0.88);   // 0→1 as exits
-  const progress = entered - exiting;   // peaks at 1, returns to 0
+  const entered  = ss(p, 0.15, 0.45);
+  const exiting  = ss(p, 0.60, 0.88);
+  const progress = entered - exiting;        // peaks at 1, returns to 0
   const op    = 0.08 + progress * 0.92;
   const leftX = (1 - progress) * -120;
   const rightX= (1 - progress) *  120;
-  // heading parallax independent
-  const headY = (p - 0.5) * -40;
+  const headY = (p - 0.5) * -40;            // independent vertical parallax
 
   return (
     <section className="h-prob" ref={secRef}>
@@ -73,10 +73,17 @@ function ProblemSection() {
   );
 }
 
-/* ── Cards section with staggered parallax per card ── */
+/* ═══════════════════════════════════════════════════════════════
+   CARDS SECTION — staggered cards + fully reversing header
+═══════════════════════════════════════════════════════════════ */
 function CardsSection({ go }) {
   const [secRef, p] = useElP();
-  const s = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+  // Header: entered-exiting pattern so it reverses too
+  const hdrEntered = ss(p, 0.04, 0.30);
+  const hdrExiting = ss(p, 0.72, 0.94);
+  const hdrProg    = hdrEntered - hdrExiting;
+  const eyeP = ss(hdrProg, 0.00, 0.40);
+  const h2P  = ss(hdrProg, 0.15, 0.55);
 
   const cards = [
     { page:"how",  num:"01", title:"How It Works", desc:"The three-step flow from PDF upload to permanent blockchain record.", img:"https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=80", word:"FLOW",  accent:"#b8922a" },
@@ -88,20 +95,20 @@ function CardsSection({ go }) {
     <section className="h-cards" ref={secRef}>
       <div className="h-cards__bleed">EXPLORE</div>
       <div className="h-cards__inner">
-        {/* Header slides up */}
         <div className="h-cards__hdr">
-          <div style={{ opacity: ss(p,0.04,0.26), transform: `translateY(${(1-ss(p,0.04,0.26))*100}px)` }}>
+          {/* Eyebrow and h2 each stagger in and retrace out */}
+          <div style={{ opacity: eyeP, transform: `translateY(${(1-eyeP)*100}px)` }}>
             <div className="eyebrow">Discover More</div>
           </div>
-          <div style={{ opacity: ss(p,0.12,0.36), transform: `translateY(${(1-ss(p,0.12,0.36))*120}px) scale(${0.9 + ss(p,0.12,0.36)*0.1})` }}>
+          <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*120}px) scale(${0.9+h2P*0.1})` }}>
             <h2 className="h-cards__h2">Everything you need to know.</h2>
           </div>
         </div>
         <div className="h-cards__grid">
           {cards.map(({ page, num, title, desc, img, word, accent }, i) => {
-            const delay = i * 0.06;
-            const entered = s(p, 0.12 + delay, 0.38 + delay);
-            const exiting = s(p, 0.68, 0.9);
+            const delay   = i * 0.06;
+            const entered = ss(p, 0.12 + delay, 0.38 + delay);
+            const exiting = ss(p, 0.68, 0.90);
             const prog    = entered - exiting;
             return (
               <div className="h-card" key={page} style={{ "--ca": accent,
@@ -109,7 +116,6 @@ function CardsSection({ go }) {
                 transform: `translateY(${(1 - prog) * 60}px)`,
               }} onClick={() => go(page)}>
                 <div className="h-card__img-wrap">
-                  {/* Image parallax inside card */}
                   <img src={img} alt={title} className="h-card__img" loading="lazy"
                     style={{
                       transform: `translateY(${(p - 0.5) * -24}px) scale(${1.06 + (1 - prog) * 0.22})`,
@@ -133,31 +139,42 @@ function CardsSection({ go }) {
   );
 }
 
-/* ── Trust section — items slide in from alternating sides ── */
+/* ═══════════════════════════════════════════════════════════════
+   TRUST SECTION — alternating slide + fully reversing header
+═══════════════════════════════════════════════════════════════ */
 function TrustSection() {
   const [secRef, p] = useElP();
-  const s = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+  // Header: entered-exiting so it reverses
+  const hdrEntered = ss(p, 0.04, 0.28);
+  const hdrExiting = ss(p, 0.72, 0.94);
+  const hdrProg    = hdrEntered - hdrExiting;
+  const eyeP = ss(hdrProg, 0.00, 0.40);
+  const h2P  = ss(hdrProg, 0.15, 0.55);
+
   const items = [
-    { icon:"🔐", title:"Tamper-Proof",  desc:"Once written to the blockchain, no record can be altered. Not by us, not by anyone.", accent:"#b8922a" },
-    { icon:"🌐", title:"Public",        desc:"Every record is openly queryable by anyone in the world with the contract address and CID.", accent:"#3d7fff" },
-    { icon:"⏱",  title:"Timestamped",  desc:"Block timestamps are set by network consensus — impossible to backdate or manipulate.", accent:"#1a6b5a" },
-    { icon:"🔑", title:"Self-Sovereign",desc:"You own your record. No account, no login — just your wallet and the blockchain.", accent:"#8b2020" },
+    { icon:"🔐", title:"Tamper-Proof",   desc:"Once written to the blockchain, no record can be altered. Not by us, not by anyone.", accent:"#b8922a" },
+    { icon:"🌐", title:"Public",          desc:"Every record is openly queryable by anyone in the world with the contract address and CID.", accent:"#3d7fff" },
+    { icon:"⏱",  title:"Timestamped",    desc:"Block timestamps are set by network consensus — impossible to backdate or manipulate.", accent:"#1a6b5a" },
+    { icon:"🔑", title:"Self-Sovereign",  desc:"You own your record. No account, no login — just your wallet and the blockchain.", accent:"#8b2020" },
   ];
-  // Title slides up
-  const titleProg = s(p, 0.04, 0.2);
+
   return (
     <section className="h-trust" ref={secRef}>
       <div className="h-trust__inner">
-        <div style={{ opacity: titleProg, transform: `translateY(${(1-titleProg)*36}px)` }}>
-          <div className="eyebrow">Why Trust It</div>
-          <h2 className="h-trust__h2">Built on mathematical certainty.</h2>
+        <div>
+          <div style={{ opacity: eyeP, transform: `translateY(${(1-eyeP)*100}px)` }}>
+            <div className="eyebrow">Why Trust It</div>
+          </div>
+          <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*120}px) scale(${0.9+h2P*0.1})` }}>
+            <h2 className="h-trust__h2">Built on mathematical certainty.</h2>
+          </div>
         </div>
         <div className="h-trust__grid">
           {items.map(({ icon, title, desc, accent }, i) => {
-            const delay = i * 0.07;
-            const entered = s(p, 0.12 + delay, 0.36 + delay);
-            const exiting = s(p, 0.70, 0.90);
-            const prog = entered - exiting;
+            const delay   = i * 0.07;
+            const entered = ss(p, 0.12 + delay, 0.36 + delay);
+            const exiting = ss(p, 0.70, 0.90);
+            const prog    = entered - exiting;
             const fromLeft = i % 2 === 0;
             return (
               <div className="h-trust-item" key={title} style={{ "--ca": accent,
@@ -176,18 +193,31 @@ function TrustSection() {
   );
 }
 
-/* ── CTA band ── */
+/* ═══════════════════════════════════════════════════════════════
+   CTA BAND — per-element stagger + full reversal
+═══════════════════════════════════════════════════════════════ */
 function CtaSection({ go }) {
   const [ref, p] = useElP();
-  const s = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
-  const prog = s(p, 0.1, 0.45);
+  const entered = ss(p, 0.06, 0.42);
+  const exiting = ss(p, 0.68, 0.94);
+  const prog    = entered - exiting;
+  const h2P  = ss(prog, 0.00, 0.38);
+  const subP = ss(prog, 0.12, 0.50);
+  const btnP = ss(prog, 0.24, 0.62);
   return (
     <section className="h-cta" ref={ref}>
-      <div className="h-cta__bleed">REGISTER</div>
-      <div className="h-cta__inner" style={{ opacity: 0.05 + prog * 0.95, transform: `translateY(${(1-prog)*50}px)` }}>
-        <h2 className="h-cta__h2">Ready to establish<br /><em className="gold-text">your precedence?</em></h2>
-        <p className="h-cta__sub">Join the future of academic publishing. Permanent, public, provable.</p>
-        <div className="h-cta__btns">
+      <div className="h-cta__bleed"
+        style={{ transform: `translate(-50%,-50%) translateY(${(p-0.5)*-50}px)` }}>
+        REGISTER
+      </div>
+      <div className="h-cta__inner">
+        <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*110}px) scale(${0.9+h2P*0.1})` }}>
+          <h2 className="h-cta__h2">Ready to establish<br /><em className="gold-text">your precedence?</em></h2>
+        </div>
+        <div style={{ opacity: subP, transform: `translateY(${(1-subP)*80}px)` }}>
+          <p className="h-cta__sub">Join the future of academic publishing. Permanent, public, provable.</p>
+        </div>
+        <div style={{ opacity: btnP, transform: `translateY(${(1-btnP)*60}px)` }} className="h-cta__btns">
           <button className="btn btn-gold" onClick={() => go("app")}><span>Register a Paper Now</span></button>
           <button className="btn btn-ghost" onClick={() => go("how")}>Learn How It Works</button>
         </div>
@@ -196,7 +226,9 @@ function CtaSection({ go }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   HOME — main component
+═══════════════════════════════════════════════════════════════ */
 export default function Home({ navigate }) {
   useScrollReveal(0.12);
 
@@ -205,13 +237,13 @@ export default function Home({ navigate }) {
   const [textRef,  txOff]   = useParallax(0.10);
   const [codeRef,  codeOff] = useParallax(-0.08);
   const [heroRef,  heroP]   = useElementScroll();
-  // Only apply retrace when hero is scrolling OUT (heroP > 0.7 = user scrolled down past hero)
-  // or scrolling BACK UP (heroP < 0.35 = hero re-entering from top)
-  // In middle range (0.35-0.7) = hero is in view, CSS animation handles entrance
-  const heroExit = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;   // 0→1 as hero exits upward
-  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0; // 0→1 as hero comes back from top
-  const heroFade = Math.max(heroExit, heroEnterBack);  // combined: fade out when out of center
-  const heroRetrace = 1 - heroFade;  // 1 = fully visible, 0 = invisible
+
+  // Hero: CSS keyframes handle entrance on load.
+  // heroFade kicks in only when hero is out of center viewport — reverses text on scroll away/back.
+  const heroExit      = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;
+  const heroEnterBack = heroP < 0.32 ? 1 - ss(heroP, 0.08, 0.32) : 0;
+  const heroFade      = Math.max(heroExit, heroEnterBack);
+  const heroRetrace   = 1 - heroFade;
 
   const go = (p) => { navigate(p); window.scrollTo({ top: 0 }); };
 
@@ -220,19 +252,19 @@ export default function Home({ navigate }) {
 
       {/* ══ HERO ══ */}
       <section className="h-hero" ref={heroRef}>
-        {/* Background parallax — moves slower than scroll */}
+        {/* Background: slow parallax */}
         <div ref={bgRef} className="h-hero__bg"
           style={{ transform: `translateY(${bgOff}px) scale(1.2)` }} />
         <div className="h-hero__ov" />
         <div className="h-hero__grid" />
 
-        {/* Bleeding word moves UP against scroll (counter-parallax) */}
+        {/* Bleeding word: counter-parallax (rises as you scroll down) */}
         <div ref={bleedRef} className="h-hero__bleed"
           style={{ transform: `translateX(-50%) translateY(${blOff}px)` }}>
           IMMUTABLE
         </div>
 
-        {/* Code panel — counter-scrolls slightly */}
+        {/* Floating code panel: counter-scrolls slightly */}
         <div ref={codeRef} className="h-hero__code"
           style={{ transform: `translateY(calc(-50% + ${codeOff}px))` }}>
           <div className="h-hero__code-bar">
@@ -261,11 +293,9 @@ export default function Home({ navigate }) {
 }`}</pre>
         </div>
 
-        {/* Main content — parallaxes at half speed */}
+        {/* Main content: CSS keyframes for entrance, JS heroFade for retrace */}
         <div ref={textRef} className="h-hero__content"
           style={{ transform: `translateY(${txOff}px)` }}>
-          {/* Eyebrow, h1, sub, btns: CSS animation handles entrance on load,
-              inline style handles retrace when user scrolls away and back */}
           <div className="h-hero__eyebrow"
             style={ heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroExit > heroEnterBack ? heroFade*-60 : heroFade*60}px)` } : undefined }>
             <span className="h-hero__dot" />

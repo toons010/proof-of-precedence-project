@@ -256,8 +256,11 @@ function CardsSection() {
 /* ── Architecture section ── */
 function ArchSection() {
   const [ref, p] = useElP();
-  const eyebrowP = ss(p, 0.05, 0.28);
-  const h2P      = ss(p, 0.14, 0.40);
+  const entered  = ss(p, 0.05, 0.42);
+  const exiting  = ss(p, 0.65, 0.92);
+  const prog     = entered - exiting;
+  const eyebrowP = ss(prog, 0.00, 0.32);
+  const h2P      = ss(prog, 0.10, 0.42);
   const layers = [
     { layer: "Frontend",   items: ["React App", "ethers.js v6", "Pinata SDK"],                color: "#b8922a" },
     { layer: "Blockchain", items: ["Hardhat Node / Polygon", "PaperRegistry.sol", "EVM"],     color: "#3d7fff" },
@@ -281,7 +284,7 @@ function ArchSection() {
         </div>
         <div className="tech-arch__diagram">
           {layers.map(({ layer, items, color }, i) => {
-            const lp = ss(p, 0.15 + i * 0.07, 0.4 + i * 0.07);
+            const lp = ss(prog, 0.18 + i * 0.08, 0.48 + i * 0.08);
             return (
               <div
                 className="tech-arch__layer"
@@ -316,8 +319,11 @@ function ArchSection() {
 /* ── CTA section with inline scroll ── */
 function TechCtaSection({ go }) {
   const [ref, p] = useElP();
-  const h2P  = ss(p, 0.06, 0.36);
-  const btnP = ss(p, 0.18, 0.48);
+  const entered = ss(p, 0.06, 0.44);
+  const exiting = ss(p, 0.68, 0.94);
+  const prog    = entered - exiting;
+  const h2P  = ss(prog, 0.00, 0.40);
+  const btnP = ss(prog, 0.15, 0.55);
   return (
     <section className="tech-cta" ref={ref}>
       <div className="tech-cta__inner">

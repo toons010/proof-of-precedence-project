@@ -328,7 +328,7 @@ export default function AppPage({ onWalletChange }) {
             <div className="apppage-field"><label className="apppage-wallet__label">IPFS CID to Verify</label>
               <input className="apppage-input" placeholder="bafybei…" value={vCid} onChange={e=>setVCid(e.target.value)}/></div>
 
-            <button className="btn btn-teal btn-full" onClick={doVerify} disabled={vSt==="loading"}>
+            <button className="btn btn-gold btn-full" onClick={doVerify} disabled={vSt==="loading"}>
               {vSt==="loading"?<><Spin/><span>Querying…</span></>:"Verify on Blockchain"}
             </button>
 
