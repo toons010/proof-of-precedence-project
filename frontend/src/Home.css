@@ -458,7 +458,6 @@
 }
 .h-cta__bleed {
   position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(14rem, 28vw, 26rem);
   color: rgba(184,146,42,0.028); line-height: 1;
@@ -467,10 +466,7 @@
 .h-cta__inner {
   position: relative; z-index: 2;
   max-width: 660px; margin: 0 auto;
-  opacity: 0; transform: translateY(40px);
-  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
 }
-.h-cta__inner.revealed { opacity: 1; transform: translateY(0); }
 .h-cta__h2 {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(2.4rem, 5vw, 4.2rem);

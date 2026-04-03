@@ -153,11 +153,14 @@ function Step({ step, i }) {
 /* ── Flow section — DRAMATIC subheading animation ── */
 function FlowSection({ go }) {
   const [ref, p] = useElP();
+  // entered - exiting = peaks at 1, returns to 0 as section exits. TRUE bidirectional.
+  const entered  = ss(p, 0.06, 0.38);
+  const exiting  = ss(p, 0.65, 0.92);
+  const prog     = entered - exiting;
+  const bleedY   = (p - 0.5) * -70;
 
-  /* DRAMATIC — eyebrow slides 100px, h2 slides 120px, wide windows */
-  const eyebrowP = ss(p, 0.04, 0.28);
-  const h2P      = ss(p, 0.12, 0.38);
-  const bleedP   = (p - 0.5) * -70;
+  const eyebrowP = ss(prog, 0.00, 0.35);
+  const h2P      = ss(prog, 0.10, 0.45);
 
   const nodes = [
     { icon: "📄", label: "Your PDF",   sub: "Any research paper" },
@@ -172,38 +175,27 @@ function FlowSection({ go }) {
   return (
     <section className="hiw-flow" ref={ref}>
       <div className="hiw-flow__bleed"
-        style={{ transform: `translate(-50%,-50%) translateY(${bleedP}px)` }}>
+        style={{ transform: `translate(-50%,-50%) translateY(${bleedY}px)` }}>
         FLOW
       </div>
       <div className="hiw-flow__inner">
-
-        {/* Eyebrow: slides up 100px + fade */}
-        <div style={{
-          opacity: eyebrowP,
-          transform: `translateY(${(1 - eyebrowP) * 100}px)`,
-        }}>
+        <div style={{ opacity: eyebrowP, transform: `translateY(${(1-eyebrowP)*100}px)` }}>
           <div className="eyebrow">The Complete Flow</div>
         </div>
-
-        {/* H2: slides up 120px with bigger delay */}
-        <div style={{
-          opacity: h2P,
-          transform: `translateY(${(1 - h2P) * 120}px)`,
-        }}>
+        <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*120}px) scale(${0.9+h2P*0.1})` }}>
           <h2 className="hiw-flow__h2">End-to-end in one view.</h2>
         </div>
-
         <div className="hiw-flow__row">
           {nodes.map((item, i) => {
-            const np = ss(p, 0.20 + i * 0.05, 0.50 + i * 0.05);
+            const np = ss(prog, 0.18 + i * 0.06, 0.50 + i * 0.06);
             return item.arrow ? (
               <div className="hiw-flow__arr" key={i}
-                style={{ opacity: np, transform: `translateX(${(1 - np) * -20}px)` }}>→</div>
+                style={{ opacity: np, transform: `translateX(${(1-np)*-20}px)` }}>→</div>
             ) : (
               <div className="hiw-flow__node" key={i}
                 style={{
                   opacity: np,
-                  transform: `translateY(${(1 - np) * 50}px) scale(${0.85 + np * 0.15})`,
+                  transform: `translateY(${(1-np)*50}px) scale(${0.85+np*0.15})`,
                 }}>
                 <div className="hiw-flow__node-icon">{item.icon}</div>
                 <div className="hiw-flow__node-label">{item.label}</div>
@@ -220,22 +212,25 @@ function FlowSection({ go }) {
 /* ── CTA section — dramatic h2 + sub + buttons ── */
 function CtaSection({ go }) {
   const [ref, p] = useElP();
-  const h2P  = ss(p, 0.08, 0.38);
-  const subP = ss(p, 0.20, 0.50);
-  const btnP = ss(p, 0.32, 0.60);
+  const entered = ss(p, 0.08, 0.45);
+  const exiting = ss(p, 0.70, 0.94);
+  const prog    = entered - exiting;
+  const h2P  = ss(prog, 0.00, 0.40);
+  const subP = ss(prog, 0.12, 0.52);
+  const btnP = ss(prog, 0.24, 0.64);
 
   return (
     <section className="hiw-cta" ref={ref}>
       <div className="hiw-cta__inner">
-        <div style={{ opacity: h2P, transform: `translateY(${(1 - h2P) * 100}px)` }}>
+        <div style={{ opacity: h2P, transform: `translateY(${(1-h2P)*100}px) scale(${0.9+h2P*0.1})` }}>
           <h2 className="hiw-cta__h2">Ready to register your paper?</h2>
         </div>
-        <div style={{ opacity: subP, transform: `translateY(${(1 - subP) * 70}px)` }}>
+        <div style={{ opacity: subP, transform: `translateY(${(1-subP)*70}px)` }}>
           <p className="hiw-cta__sub">
             Upload to IPFS. Submit to blockchain. Establish your precedence — permanently.
           </p>
         </div>
-        <div style={{ opacity: btnP, transform: `translateY(${(1 - btnP) * 50}px)` }}
+        <div style={{ opacity: btnP, transform: `translateY(${(1-btnP)*50}px)` }}
           className="hiw-cta__btns">
           <button className="btn btn-gold" onClick={() => go("app")}>
             <span>Launch the App →</span>
