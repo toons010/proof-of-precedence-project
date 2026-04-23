@@ -190,6 +190,12 @@ function CtaSection({ go }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function Home({ navigate }) {
+  const [rewRef, rewP] = useElP();
+  /* Synchronized with Problem/Cards sections: 
+     Entrance starts early (0.08) and completes at 0.36. 
+     Retrace starts at 0.50 and finishes at 0.80. */
+  const rewPr = prog(rewP, 0.08, 0.36, 0.50, 0.80);
+
   useScrollReveal(0.12);
   const [bgRef, bgOff]     = useParallax(0.28);
   const [bleedRef, blOff]  = useParallax(-0.06);
@@ -260,6 +266,38 @@ export default function Home({ navigate }) {
       <ProblemSection />
       <CardsSection go={go} />
       <TrustSection />
+      {/* ── New Reward Spotlight Section ── */}
+    <section className="h-reward-spot" ref={rewRef}>
+      <div className="h-reward-spot__bg" style={{ transform: `translateX(${(rewP-0.5)*-50}px)` }} />
+      <div className="h-reward-spot__ov" />
+      <div className="h-reward-spot__inner">
+        <div className="h-reward-spot__content" 
+             style={{ opacity: rewPr, transform: `translateX(${(1-rewPr)*-240}px) translateY(${(rewP-0.5)*-50}px)` }}>
+          <div className="eyebrow">The Gold Standard</div>
+          <h2 className="h-reward-spot__h2">Reward <em className="gold-text">Excellence.</em></h2>
+          <p className="h-reward-spot__para">Our peer-review economy incentivizes high-quality research. Editors can now issue on-chain rewards and cryptographic certificates of merit directly to reviewers.</p>
+          <div className="h-reward-spot__stats">
+            <div className="h-reward-spot__stat">
+              <span className="h-reward-spot__stat-v">ETH</span>
+              <span className="h-reward-spot__stat-l">Direct Rewards</span>
+            </div>
+            <div className="h-reward-spot__stat">
+              <span className="h-reward-spot__stat-v">NFT</span>
+              <span className="h-reward-spot__stat-l">Verifiable Badges</span>
+            </div>
+          </div>
+          <div className="h-reward-spot__btns">
+            <button className="btn btn-gold" onClick={() => navigate("app", "reward")}><span>Explore Rewards</span></button>
+          </div>
+        </div>
+        <div className="h-reward-spot__img-wrap" 
+             style={{ opacity: rewPr, transform: `translateX(${(1-rewPr)*240}px)` }}>
+          <img src="/assets/award.png" alt="Excellence Award" className="h-reward-spot__img" 
+               style={{ transform: `scale(${1.1 - (rewP*0.1)})` }} />
+          <div className="h-reward-spot__img-shine" />
+        </div>
+      </div>
+    </section>
       <CtaSection go={go} />
     </div>
   );

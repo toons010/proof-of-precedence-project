@@ -27,8 +27,9 @@ proof-of-precedence/
 │   ├── src/
 │   │   ├── App.js                 # Main App Component
 │   │   ├── AppPage.js             # Paper Registration & Verification UI
-│   │   └── JournalPanel.js        # Journals & Peer Review Interface
-│   └── public/index.html
+│   │   ├── JournalPanel.js        # Journals & Peer Review Interface
+│   │   └── useScrollAnimation.js  # Custom hooks for parallax & reveal
+│   └── public/assets/             # Generated premium assets (trophies, etc)
 ├── .env.example
 ├── hardhat.config.js
 └── package.json
@@ -279,8 +280,21 @@ The UI provides:
 1. **Upload PDF** — drag-and-drop → uploads to Pinata → shows CID
 2. **Submit** — paste contract address + CID → triggers MetaMask → records on-chain
 3. **Verify** — look up any CID → displays author, timestamp, and precedence status
+4. **Journals & Rewards** — submit papers to specific journals, participate in peer review, and claim on-chain ETH/NFT rewards for high-quality feedback.
 
 ---
+
+## Reward System & Peer Review
+
+The platform now features a complete **Peer Review Economy**:
+
+1. **Submit to Journal**: Researchers can submit registered papers to specific journals (using `PaperRegistry`).
+2. **Reviewing**: Peers can submit reviews for these papers via `ReviewManager`.
+3. **Reward Distribution**: Editors can reward reviewers for high-quality contributions directly on-chain.
+4. **Verifiable Certificates**: Automated generation of cryptographic certificates for rewarded reviewers, featuring a gold-themed UI and celebratory animations.
+
+### Navigation Support
+The app supports state-based deep linking, allowing the Navbar or Spotlight buttons to navigate users directly to specific sub-tabs (e.g., "Reward Reviewer") within the `JournalPanel`.
 
 ## Option B — Deploy to Polygon Mumbai
 

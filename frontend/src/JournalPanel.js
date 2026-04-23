@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ethers } from "ethers";
+import { useParallax } from "./useScrollAnimation";
 import "./JournalPanel.css";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -43,8 +44,8 @@ function StatusMsg({ type, msg }) {
   const cls = { success: "jp-status--ok", error: "jp-status--err", loading: "jp-status--ld" };
   return (
     <div className={`jp-status ${cls[type] || ""}`}>
-      {type === "loading" ? <Spin /> : <span>{type === "success" ? "✓" : "✕"}</span>}
-      <span>{msg}</span>
+      {type === "loading" ? <Spin /> : <span className="jp-status__icon">{type === "success" ? "✓" : "✕"}</span>}
+      <span className="jp-status__text">{msg}</span>
     </div>
   );
 }
@@ -101,7 +102,11 @@ function CreateJournalPanel({ wallet }) {
 
   return (
     <div className="jp-subpanel">
-      <div className="jp-subpanel__icon">📰</div>
+      <div className="jp-subpanel__img-wrap">
+        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=1200&q=80" alt="Journal" className="jp-subpanel__img" />
+        <div className="jp-subpanel__img-ov" />
+        <div className="jp-subpanel__icon">📰</div>
+      </div>
       <h3 className="jp-subpanel__title">Create Journal</h3>
       <p className="jp-subpanel__desc">Register a new academic journal on-chain. You become the editor.</p>
 
@@ -185,7 +190,11 @@ function SubmitToJournalPanel({ wallet, currentCid }) {
 
   return (
     <div className="jp-subpanel">
-      <div className="jp-subpanel__icon">⛓</div>
+      <div className="jp-subpanel__img-wrap">
+        <img src="https://images.unsplash.com/photo-1639322537228-f710d846310a?w=1200&q=80" alt="Submit" className="jp-subpanel__img" />
+        <div className="jp-subpanel__img-ov" />
+        <div className="jp-subpanel__icon">⛓</div>
+      </div>
       <h3 className="jp-subpanel__title">Submit to Journal</h3>
       <p className="jp-subpanel__desc">Submit the currently active paper to a journal.</p>
 
@@ -274,7 +283,11 @@ function ReviewPanel({ wallet, currentCid }) {
 
   return (
     <div className="jp-subpanel">
-      <div className="jp-subpanel__icon">🧪</div>
+      <div className="jp-subpanel__img-wrap">
+        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80" alt="Review" className="jp-subpanel__img" />
+        <div className="jp-subpanel__img-ov" />
+        <div className="jp-subpanel__icon">🧪</div>
+      </div>
       <h3 className="jp-subpanel__title">Peer Review</h3>
       <p className="jp-subpanel__desc">Review the currently active paper. We handle the reviewer registration automatically behind the scenes.</p>
 
@@ -320,18 +333,112 @@ function ReviewPanel({ wallet, currentCid }) {
 // Main export
 // ────────────────────────────────────────────────────────────────────────────
 
+function RewardPanel({ wallet }) {
+  const [rewardCID, setRewardCID] = useState("");
+  const [rewardReviewer, setRewardReviewer] = useState("");
+  const [rewardAmount, setRewardAmount] = useState("");
+  const [st, setSt] = useState("idle");
+  const [msg, setMsg] = useState("");
+  const [txHash, setTxHash] = useState("");
+
+  const [confetti, setConfetti] = useState(false);
+
+  const handleReward = async () => {
+    if (!wallet)          { setMsg("Connect wallet first."); setSt("error"); return; }
+    if (!rewardCID.trim()) { setMsg("Enter a paper CID."); setSt("error"); return; }
+    if (!rewardReviewer.trim()) { setMsg("Enter a reviewer address."); setSt("error"); return; }
+    if (!rewardAmount || Number(rewardAmount) <= 0) { setMsg("Enter a valid reward amount."); setSt("error"); return; }
+
+    setSt("loading"); setMsg("Processing transaction..."); setTxHash(""); setConfetti(false);
+    try {
+      const signer = getSigner();
+      const rewardAddress = process.env.REACT_APP_REWARD_CONTRACT_ADDRESS;
+      const rewardABI = ["function rewardReviewer(string ipfsHash, address reviewer) payable"];
+      const rewardContract = new ethers.Contract(rewardAddress, rewardABI, signer);
+      const value = ethers.parseEther(rewardAmount);
+
+      setMsg("Authorizing value transfer…");
+      const tx = await rewardContract.rewardReviewer(rewardCID, rewardReviewer, { value });
+      setTxHash(tx.hash);
+      setMsg("Confirming on-chain…");
+      
+      const receipt = await tx.wait(1);
+      setSt("success");
+      setConfetti(true);
+      setMsg(`Reward successfully dispersed · Block #${receipt.blockNumber}`);
+    } catch (err) {
+      setSt("error"); setMsg(err?.reason || err?.message || "Failed.");
+    }
+  };
+
+  return (
+    <div className={`jp-subpanel jp-subpanel--reward ${confetti ? 'jp-reward-success' : ''}`}>
+      <div className="jp-subpanel__img-wrap">
+        <img src="https://images.unsplash.com/photo-1639762681057-408e52192e55?w=1200&q=80" alt="Reward" className="jp-subpanel__img jp-subpanel__img--gold" />
+        <div className="jp-subpanel__img-ov jp-subpanel__img-ov--gold" />
+        <div className="jp-subpanel__icon jp-subpanel__icon--reward">🏆</div>
+        {confetti && <div className="jp-reward-confetti">✨ GOLD DISPERSED ✨</div>}
+      </div>
+      
+      <div className="jp-reward-body">
+        <h3 className="jp-subpanel__title gold-text">Disperse Reward</h3>
+        <p className="jp-subpanel__desc">Recognize exceptional contributions by issuing an on-chain reward and a cryptographic certificate of excellence.</p>
+
+        <div className="jp-reward-grid">
+          <Field label="Paper CID">
+            <input className="jp-input jp-input--gold" placeholder="bafybe..." value={rewardCID} onChange={e => setRewardCID(e.target.value)} />
+          </Field>
+          <Field label="Reviewer Address">
+            <input className="jp-input jp-input--gold" placeholder="0x..." value={rewardReviewer} onChange={e => setRewardReviewer(e.target.value)} />
+          </Field>
+        </div>
+        
+        <Field label="Reward Amount (ETH)">
+          <div className="jp-reward-amt-wrap">
+            <input className="jp-input jp-input--gold jp-input--lg" type="number" min="0" step="0.01" placeholder="0.05" value={rewardAmount} onChange={e => setRewardAmount(e.target.value)} />
+            <span className="jp-reward-unit">ETH</span>
+          </div>
+        </Field>
+
+        <button className="jp-btn jp-btn--gold jp-btn--reward" onClick={handleReward} disabled={st === "loading"}>
+          {st === "loading" ? <><Spin /><span>Dispersing…</span></> : "Confirm Reward Dispersal"}
+        </button>
+
+        <StatusMsg type={st} msg={msg} />
+
+        {st === "success" && txHash && (
+          <div className="jp-cert jp-cert--gold">
+            <div className="jp-cert__shine" />
+            <div className="jp-cert__seal">🏆</div>
+            <div className="jp-cert__title">Excellence Certified</div>
+            <p className="jp-cert__sub">Reward of {rewardAmount} ETH has been permanently recorded on-chain.</p>
+            <div className="jp-cert__row">
+              <span className="jp-cert__lbl">Proof</span>
+              <span className="jp-cert__val">{txHash.slice(0,32)}…</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 const SUBTABS = [
   { id: "create-journal",  icon: "📰", label: "Create Journal",    n: "04" },
   { id: "submit-journal",  icon: "⛓",  label: "Submit to Journal", n: "05" },
   { id: "review",          icon: "🧪", label: "Peer Review",       n: "06" },
+  { id: "reward",          icon: "🏆", label: "Reward Reviewer",   n: "07" },
 ];
 
-export default function JournalPanel({ wallet, currentCid }) {
-  const [tab, setTab] = useState("create-journal");
+export default function JournalPanel({ wallet, currentCid, initialTab }) {
+  const [tab, setTab] = useState(initialTab || "create-journal");
+  const [headRef, headOff] = useParallax(0.1);
 
   return (
-    <div className="jp__inner">
-      <div className="jp__header">
+    <div className="jp__inner tech-grid-bg">
+      <div className="jp__header" ref={headRef} style={{ transform: `translateY(${headOff}px)` }}>
         <div className="jp__header-eyebrow">Phase 2</div>
         <h2 className="jp__header-title">Journals &amp; <em>Peer Review</em></h2>
         <p className="jp__header-sub">
@@ -341,7 +448,7 @@ export default function JournalPanel({ wallet, currentCid }) {
       </div>
 
       {/* Sub-tab bar */}
-      <div className="jp__tabs">
+      <div className="jp__tabs" style={{ gridTemplateColumns: `repeat(${SUBTABS.length}, 1fr)` }}>
         {SUBTABS.map(({ id, icon, label, n }) => (
           <button
             key={id}
@@ -355,15 +462,21 @@ export default function JournalPanel({ wallet, currentCid }) {
         ))}
         <div
           className="jp__tab-indicator"
-          style={{ left: `${SUBTABS.findIndex(t => t.id === tab) * 33.333}%` }}
+          style={{ 
+            width: `${100 / SUBTABS.length}%`, 
+            left: `${SUBTABS.findIndex(t => t.id === tab) * (100 / SUBTABS.length)}%` 
+          }}
         />
       </div>
 
       {/* Panels */}
       <div className="jp__content">
-        {tab === "create-journal"  && <CreateJournalPanel    wallet={wallet} />}
-        {tab === "submit-journal"  && <SubmitToJournalPanel  wallet={wallet} currentCid={currentCid} />}
-        {tab === "review"          && <ReviewPanel           wallet={wallet} currentCid={currentCid} />}
+        <div key={tab} className="page-enter">
+          {tab === "create-journal"  && <CreateJournalPanel    wallet={wallet} />}
+          {tab === "submit-journal"  && <SubmitToJournalPanel  wallet={wallet} currentCid={currentCid} />}
+          {tab === "review"          && <ReviewPanel           wallet={wallet} currentCid={currentCid} />}
+          {tab === "reward"          && <RewardPanel           wallet={wallet} />}
+        </div>
       </div>
     </div>
   );

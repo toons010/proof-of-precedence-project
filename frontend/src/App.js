@@ -9,16 +9,21 @@ import "./global.css";
 
 export default function App() {
   const [page, setPage]     = useState("home");
+  const [activeTab, setActiveTab] = useState(null);
   const [wallet, setWallet] = useState("");
 
-  const navigate = (p) => setPage(p);
+  const navigate = (p, tab = null) => {
+    setPage(p);
+    if (tab) setActiveTab(tab);
+    else setActiveTab(null);
+  };
 
   const renderPage = () => {
     switch(page) {
       case "home": return <Home navigate={navigate} />;
       case "how":  return <HowItWorks navigate={navigate} />;
       case "tech": return <TechPage navigate={navigate} />;
-      case "app":  return <AppPage onWalletChange={setWallet} />;
+      case "app":  return <AppPage onWalletChange={setWallet} initialTab={activeTab} />;
       default:     return <Home navigate={navigate} />;
     }
   };
