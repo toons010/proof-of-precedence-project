@@ -1,8 +1,8 @@
 # ⛓ Proof of Precedence — Blockchain Academic Publishing
 
-An end-to-end system for registering academic papers on-chain.
+An end-to-end system for registering academic papers on-chain and managing decentralized peer reviews.
 Upload a PDF to IPFS → submit the CID to a Solidity smart contract →
-prove immutable authorship and timestamp to the world.
+prove immutable authorship and timestamp to the world. Extend the platform by submitting to journals and participating in peer reviews directly on-chain.
 
 ---
 
@@ -11,18 +11,23 @@ prove immutable authorship and timestamp to the world.
 ```
 proof-of-precedence/
 ├── contracts/
-│   └── PaperRegistry.sol          # Solidity smart contract
+│   ├── IPaperRegistry.sol         # Interface for the Paper Registry
+│   ├── PaperRegistry.sol          # Core smart contract with Journal support
+│   └── ReviewManager.sol          # Smart contract managing peer reviews
 ├── scripts/
-│   ├── deploy.js                  # Deploy contract to any network
+│   ├── deploy.js                  # Deploy contracts to any network
 │   ├── uploadToIPFS.js            # Upload PDF → get CID
 │   ├── submitPaper.js             # Submit CID to blockchain
-│   └── verifyPaper.js             # Verify proof on-chain
+│   ├── verifyPaper.js             # Verify proof on-chain
+│   ├── submitToJournal.js         # Script to submit to a specific journal
+│   └── submitReview.js            # Script to submit a peer review
 ├── test/
 │   └── PaperRegistry.test.js      # Hardhat / Chai test suite
 ├── frontend/                      # React UI
 │   ├── src/
-│   │   ├── App.js
-│   │   └── App.css
+│   │   ├── App.js                 # Main App Component
+│   │   ├── AppPage.js             # Paper Registration & Verification UI
+│   │   └── JournalPanel.js        # Journals & Peer Review Interface
 │   └── public/index.html
 ├── .env.example
 ├── hardhat.config.js
