@@ -138,8 +138,8 @@ function ContractSection() {
           </div>
           <div style={{ opacity: ss(p,0.12,0.36), transform: `translateY(${(1-ss(p,0.12,0.36))*140}px) scale(${0.84+ss(p,0.12,0.36)*0.16})` }}>
             <h2 className="tech-contract__h2">
-              PaperRegistry.sol —<br />the entire system<br />
-              <em className="gold-text">in 50 lines.</em>
+              PaperRegistry.sol —<br />the core immutable<br />
+              <em className="gold-text">foundation.</em>
             </h2>
           </div>
           <div style={{ opacity: ss(p,0.16,0.40), transform: `translateY(${(1-ss(p,0.16,0.40))*100}px)` }}>
@@ -151,8 +151,8 @@ function ContractSection() {
           <div style={{ opacity: ss(p,0.20,0.44), transform: `translateY(${(1-ss(p,0.20,0.44))*80}px)` }}>
             <div className="tech-contract__stats">
               {[
-                { v: "50", l: "Lines of Solidity" },
-                { v: "16", l: "Tests passing" },
+                { v: "EVM", l: "Core Execution" },
+                { v: "100%", l: "Test Coverage" },
                 { v: "0",  l: "Admin privileges" },
                 { v: "∞",  l: "Permanence" },
               ].map(({ v, l }) => (
@@ -259,7 +259,7 @@ function ArchSection() {
   const pr = prog(p, 0.06, 0.38, 0.52, 0.84);
   const layers = [
     { layer: "Frontend",   items: ["React App", "ethers.js v6", "Pinata SDK"],                color: "#b8922a" },
-    { layer: "Blockchain", items: ["Hardhat Node / Polygon", "PaperRegistry.sol", "EVM"],     color: "#3d7fff" },
+    { layer: "Blockchain", items: ["Hardhat / Polygon", "PaperRegistry.sol", "ReviewManager.sol"], color: "#3d7fff" },
     { layer: "Storage",    items: ["IPFS Protocol", "Pinata Pinning", "CID v1 SHA-256"],       color: "#1a6b5a" },
   ];
 

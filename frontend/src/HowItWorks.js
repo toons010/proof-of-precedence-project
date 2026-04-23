@@ -40,6 +40,11 @@ const STEPS = [
     details:["Read-only view function — zero gas cost","No wallet or account required to verify","Returns author, timestamp, existence status","Valid as long as Polygon blockchain exists"],
     code:"const [cid, author, ts, exists]\n  = await registry.getPaper(cid);",
     img:"https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1400&q=80", accent:"#1a6b5a" },
+  { num:"04", tag:"Step Four", title:"Journals & Peer Review", headline:"DECENTRALISED",
+    desc:"Submit your registered paper to an on-chain academic journal. Reviewers cryptographically sign their peer reviews with a score and comments, permanently attached to your paper's CID.",
+    details:["Create journals and set submission fees","Submit papers directly to journal contracts","Reviewers sign evaluations permanently on-chain","Entire peer review history is immutable and public"],
+    code:"await reviewMgr.submitReview(cid, 5, 'Great');",
+    img:"https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1400&q=80", accent:"#c9a84c" },
 ];
 
 function Step({ step, i }) {
@@ -132,6 +137,8 @@ function FlowSection() {
     {icon:"⛓", label:"Blockchain",sub:"CID + Wallet + Timestamp"},
     {arrow:true},
     {icon:"✅",label:"Proof",     sub:"Public · Permanent · Verified"},
+    {arrow:true},
+    {icon:"📰",label:"Journals",  sub:"Submit & Peer Review"},
   ];
   return (
     <section className="hiw-flow" ref={ref}>
@@ -205,14 +212,14 @@ export default function HowItWorks({ navigate }) {
         <div ref={textRef} className="hiw-hero__content" style={{transform:`translateY(${textOff}px)`}}>
           <div className="eyebrow" style={hf>0.01?{opacity:hr,transform:`translateY(${hf*-80}px)`}:undefined}>The Process</div>
           <h1 className="hiw-hero__h1" style={hf>0.01?{opacity:hr,transform:`translateY(${hf*100}px)`}:undefined}>
-            Three steps.<br /><em className="gold-text">Permanent proof.</em>
+            Four steps.<br /><em className="gold-text">Permanent proof.</em>
           </h1>
           <p className="hiw-hero__sub" style={hf>0.01?{opacity:hr,transform:`translateY(${hf*80}px)`}:undefined}>
             From raw PDF to immutable blockchain record — here's exactly what happens at every stage.
           </p>
         </div>
         <div className="hiw-hero__stats">
-          {[{v:"3",l:"Steps"},{v:"SHA-256",l:"Hashing"},{v:"EVM",l:"Execution"},{v:"0 Gas",l:"To Verify"}].map(({v,l})=>(
+          {[{v:"4",l:"Steps"},{v:"SHA-256",l:"Hashing"},{v:"EVM",l:"Execution"},{v:"0 Gas",l:"To Verify"}].map(({v,l})=>(
             <div className="hiw-hero__stat" key={l}><div className="hiw-hero__stat-v">{v}</div><div className="hiw-hero__stat-l">{l}</div></div>
           ))}
         </div>
