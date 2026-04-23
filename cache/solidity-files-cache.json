@@ -1,9 +1,9 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "C:\\Users\\User\\Downloads\\proof-of-precedence\\proof-of-precedence\\contracts\\PaperRegistry.sol": {
-      "lastModificationDate": 1774428792859,
-      "contentHash": "dd3094d6f99817fa510e26ec9dabc771",
+    "C:\\Users\\user\\WebstormProjects\\proof-of-precedence-project\\contracts\\PaperRegistry.sol": {
+      "lastModificationDate": 1776623307493,
+      "contentHash": "4bf23ab474ea37be2aa92e606244754e",
       "sourceName": "contracts/PaperRegistry.sol",
       "solcConfig": {
         "version": "0.8.19",
@@ -34,6 +34,78 @@
       ],
       "artifacts": [
         "PaperRegistry"
+      ]
+    },
+    "C:\\Users\\user\\WebstormProjects\\proof-of-precedence-project\\contracts\\IPaperRegistry.sol": {
+      "lastModificationDate": 1776623331847,
+      "contentHash": "2bd573492c29c54d2054bf5b80e7f991",
+      "sourceName": "contracts/IPaperRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "IPaperRegistry"
+      ]
+    },
+    "C:\\Users\\user\\WebstormProjects\\proof-of-precedence-project\\contracts\\ReviewManager.sol": {
+      "lastModificationDate": 1776623333865,
+      "contentHash": "e1149a935a9cea8239e1cc29e1171cda",
+      "sourceName": "contracts/ReviewManager.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IPaperRegistry.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "ReviewManager"
       ]
     }
   }

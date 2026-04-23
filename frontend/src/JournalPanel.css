@@ -1,0 +1,361 @@
+/* ─────────────────────────────────────────────────────────────
+   JournalPanel.css — Journals & Peer Review section styles
+   Matches the existing AppPage visual language exactly.
+───────────────────────────────────────────────────────────── */
+
+/* ── Section wrapper ── */
+.jp__inner {
+  margin: 0 auto;
+  padding: 0;
+  position: relative;
+  z-index: 2;
+  animation: panSlide 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ── Section header ── */
+.jp__header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.jp__header-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c9a84c;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.28);
+  border-radius: 20px;
+  padding: 4px 14px;
+  margin-bottom: 20px;
+}
+
+.jp__header-title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  color: #f0f2ff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 14px;
+}
+
+.jp__header-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #c9a84c 0%, #ffe08a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.jp__header-sub {
+  color: #8890b0;
+  font-size: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Tab bar ── */
+.jp__tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #06070c;
+  border: 1px solid #1a2030;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.jp__tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #8890b0;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.jp__tab:hover { background: rgba(255,255,255,0.05); color: #c9a84c; }
+
+.jp__tab--active {
+  color: #f0f2ff;
+  background: rgba(201,168,76,0.12);
+}
+
+.jp__tab-icon { font-size: 16px; }
+.jp__tab-n {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.4;
+  font-family: monospace;
+}
+
+.jp__tab-indicator {
+  position: absolute;
+  bottom: 0;
+  width: 33.333%;
+  height: 2px;
+  background: linear-gradient(to right, #b8922a, #d4aa44);
+  transition: left 0.35s cubic-bezier(.16,1,.3,1);
+}
+
+/* ── Content panel ── */
+.jp__content {
+  background: #080a12;
+  border: 1px solid #1a2030;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Sub-panel ── */
+.jp-subpanel {
+  padding: 36px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.jp-subpanel__icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.jp-subpanel__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0f2ff;
+  margin: 0 0 8px;
+}
+
+.jp-subpanel__desc {
+  font-size: 14px;
+  color: #8890b0;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+/* ── Fields ── */
+.jp-field {
+  margin-bottom: 18px;
+}
+
+.jp-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8890b0;
+  margin-bottom: 8px;
+}
+
+.jp-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: #f0f2ff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  appearance: none;
+}
+
+.jp-input:focus {
+  border-color: rgba(201,168,76,0.55);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+
+.jp-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238890b0' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.jp-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+/* ── Section divider within sub-panel ── */
+.jp-section {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 24px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jp-section__hdr {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c9a84c;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Buttons ── */
+.jp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.12s, box-shadow 0.18s;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.jp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.jp-btn:not(:disabled):hover { opacity: 0.88; transform: translateY(-1px); }
+.jp-btn:not(:disabled):active { transform: translateY(0); }
+
+.jp-btn--gold {
+  background: linear-gradient(135deg, #c9a84c 0%, #ffe08a 100%);
+  color: #1a1200;
+  box-shadow: 0 4px 18px rgba(201,168,76,0.28);
+}
+
+.jp-btn--teal {
+  background: linear-gradient(135deg, #1ca9a0 0%, #38e0d4 100%);
+  color: #001a19;
+  box-shadow: 0 4px 18px rgba(28,169,160,0.25);
+}
+
+/* ── Spinner ── */
+.jp-spin {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: jp-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes jp-spin { to { transform: rotate(360deg); } }
+
+/* ── Status messages ── */
+.jp-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+.jp-status--ok  { background: rgba(40,199,111,0.13); color: #28c76f; border: 1px solid rgba(40,199,111,0.25); }
+.jp-status--err { background: rgba(234,84,85,0.12);  color: #ea5455; border: 1px solid rgba(234,84,85,0.25);  }
+.jp-status--ld  { background: rgba(201,168,76,0.1);  color: #c9a84c; border: 1px solid rgba(201,168,76,0.2);  }
+
+/* ── Certificate card ── */
+.jp-cert {
+  background: rgba(201,168,76,0.07);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jp-cert__seal {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.jp-cert__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f0f2ff;
+}
+
+.jp-cert__sub {
+  font-size: 13px;
+  color: #8890b0;
+  margin: 4px 0 0;
+  line-height: 1.6;
+}
+
+.jp-cert__row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.jp-cert__lbl {
+  color: #8890b0;
+  min-width: 60px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.jp-cert__val {
+  color: #c9a84c;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .jp-subpanel { padding: 24px 20px 28px; }
+  .jp__tab-label { display: none; }
+  .jp__tab { justify-content: center; }
+}
+
+/* ── Active Paper ── */
+.jp-active-paper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(201,168,76,0.06);
+  border: 1px dashed rgba(201,168,76,0.3);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.jp-active-paper__lbl {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #c9a84c;
+  letter-spacing: 0.05em;
+}
+.jp-active-paper__val {
+  font-family: monospace;
+  color: #f0f2ff;
+  font-size: 13px;
+}

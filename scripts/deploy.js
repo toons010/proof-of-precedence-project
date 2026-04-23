@@ -1,14 +1,13 @@
 /**
  * deploy.js
  * ─────────
- * Compiles and deploys the PaperRegistry contract to the selected network.
+ * Compiles and deploys PaperRegistry + ReviewManager to the selected network.
  *
  * Usage:
  *   npx hardhat run scripts/deploy.js --network localhost   (local Hardhat node)
  *   npx hardhat run scripts/deploy.js --network mumbai      (Polygon Mumbai)
  *
- * The deployed contract address is printed to stdout — copy it into your .env
- * as CONTRACT_ADDRESS so the other scripts can use it.
+ * Both contract addresses are printed — copy them into your .env.
  */
 
 const { ethers } = require("hardhat");
@@ -29,21 +28,30 @@ async function main() {
   console.log("Deploying PaperRegistry…");
   const PaperRegistry = await ethers.getContractFactory("PaperRegistry");
   const registry      = await PaperRegistry.deploy();
-
-  // Wait for the deployment transaction to be mined
   await registry.waitForDeployment();
-
   const contractAddress = await registry.getAddress();
 
-  // ── 3. Print results ─────────────────────────────────────────────────────
   console.log("\n✅  PaperRegistry deployed successfully!");
   console.log(`    Contract address : ${contractAddress}`);
   console.log(`    Transaction hash : ${registry.deploymentTransaction().hash}`);
   console.log(`    Block number     : ${registry.deploymentTransaction().blockNumber ?? "pending"}`);
 
+  // ── 3. Deploy ReviewManager ──────────────────────────────────────────────
+  console.log("\nDeploying ReviewManager…");
+  const ReviewManager = await ethers.getContractFactory("ReviewManager");
+  const reviewManager = await ReviewManager.deploy(contractAddress);
+  await reviewManager.waitForDeployment();
+  const reviewManagerAddress = await reviewManager.getAddress();
+
+  console.log("\n✅  ReviewManager deployed successfully!");
+  console.log(`    Contract address : ${reviewManagerAddress}`);
+  console.log(`    Transaction hash : ${reviewManager.deploymentTransaction().hash}`);
+
+  // ── 4. Print results ─────────────────────────────────────────────────────
   console.log("\n── Next step ──────────────────────────────────────────────────────────");
-  console.log("Add the following line to your .env file:");
-  console.log(`  CONTRACT_ADDRESS=${contractAddress}\n`);
+  console.log("Add the following lines to your .env file:");
+  console.log(`  CONTRACT_ADDRESS=${contractAddress}`);
+  console.log(`  REVIEW_MANAGER_ADDRESS=${reviewManagerAddress}\n`);
 }
 
 main().catch((err) => {
