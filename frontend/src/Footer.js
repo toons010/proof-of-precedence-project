@@ -28,7 +28,7 @@ export default function Footer({ navigate }) {
           </div>
           <div className="footer__col">
             <div className="footer__col-title">Concepts</div>
-            {["Smart Contracts","Content Addressing","Cryptographic Hashing","Proof of Stake","Decentralisation"].map(t=>(
+            {["Smart Contracts","Content Addressing","Peer Review","On-chain Journals","Decentralisation"].map(t=>(
               <span className="footer__link footer__link--text" key={t}>{t}</span>
             ))}
           </div>

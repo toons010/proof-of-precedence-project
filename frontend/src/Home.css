@@ -479,6 +479,130 @@
 
 
 
+/* ── REWARD SPOTLIGHT ────────────────────────────────────────── */
+.h-reward-spot {
+  background: #030407;
+  padding: 140px 60px;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.h-reward-spot__bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 70% 50%, rgba(184,146,42,0.12), transparent 50%);
+  pointer-events: none;
+}
+
+.h-reward-spot__ov {
+  position: absolute; inset: 0;
+  background-image: 
+    linear-gradient(rgba(184,146,42,0.01) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,146,42,0.01) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.h-reward-spot__inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1.2fr 1fr;
+  gap: 100px; align-items: center;
+  position: relative; z-index: 2;
+}
+
+.h-reward-spot__content {
+  position: relative;
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+
+.h-reward-spot__h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.8rem, 5vw, 4.2rem);
+  font-weight: 600; color: #e8edf5;
+  line-height: 1.1; margin: 16px 0 32px;
+}
+
+.h-reward-spot__para {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 1.05rem; color: #9aaabf;
+  line-height: 1.8; margin-bottom: 40px;
+  max-width: 500px;
+}
+
+.h-reward-spot__stats {
+  display: flex; gap: 40px; margin-bottom: 50px;
+}
+
+.h-reward-spot__stat {
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.h-reward-spot__stat-v {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem; color: #c9a84c; line-height: 1;
+}
+
+.h-reward-spot__stat-l {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #4a5a72;
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-reveal="left"] { transform: translateX(-30px); }
+[data-reveal="left"].revealed { transform: translateX(0); }
+
+[data-reveal="right"] { transform: translateX(30px); }
+[data-reveal="right"].revealed { transform: translateX(0); }
+
+.h-reward-spot__img-wrap {
+  position: relative;
+  border-radius: 4px; overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+  aspect-ratio: 4/5;
+  background: #0a0a0f;
+}
+
+.h-reward-spot__img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: sepia(0.1) brightness(0.95);
+  transition: transform 1s cubic-bezier(0.16,1,0.3,1);
+}
+
+.h-reward-spot:hover .h-reward-spot__img {
+  transform: scale(1.08);
+}
+
+.h-reward-spot__img-shine {
+  position: absolute; inset: 0;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+  background-size: 200% 200%;
+  animation: rewardShine 6s infinite linear;
+}
+
+@keyframes rewardShine {
+  0% { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
+}
+
+@media (max-width: 900px) {
+  .h-reward-spot { padding: 80px 24px; }
+  .h-reward-spot__inner { grid-template-columns: 1fr; gap: 60px; text-align: center; }
+  .h-reward-spot__para { margin-left: auto; margin-right: auto; }
+  .h-reward-spot__stats { justify-content: center; }
+  .h-reward-spot__img-wrap { max-width: 320px; margin: 0 auto; }
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1100px) { .h-hero__code { display: none; } .h-hero__content { margin-right: 0; } }
 @media (max-width: 900px) {

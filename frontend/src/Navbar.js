@@ -89,7 +89,15 @@ export default function Navbar({ currentPage, navigate, wallet }) {
                       <div className="mega__col" key={col.heading}>
                         <div className="mega__heading">{col.heading}</div>
                         {col.items.map(item => (
-                          <button className="mega__item" key={item.label} onMouseDown={() => go(item.page)} onClick={() => go(item.page)}>
+                          <button className="mega__item" key={item.label} onMouseDown={() => {
+                            if (item.tab) {
+                              navigate(item.page, item.tab);
+                              setMega(null);
+                              setDrawer(false);
+                            } else {
+                              go(item.page);
+                            }
+                          }} onClick={() => {}}>
                             <span className="mega__item-label">{item.label}</span>
                             <span className="mega__item-sub">{item.sub}</span>
                           </button>
@@ -110,7 +118,7 @@ export default function Navbar({ currentPage, navigate, wallet }) {
             className={`nav__link nav__link--cta ${currentPage === "app" ? "nav__link--active" : ""}`}
             onClick={() => go("app")}
           >
-            Launch App
+            Launch Dashboard
           </button>
         </div>
 

@@ -47,11 +47,23 @@ async function main() {
   console.log(`    Contract address : ${reviewManagerAddress}`);
   console.log(`    Transaction hash : ${reviewManager.deploymentTransaction().hash}`);
 
-  // ── 4. Print results ─────────────────────────────────────────────────────
+  // ── 4. Deploy RewardSystem ──────────────────────────────────────────────
+  console.log("\nDeploying RewardSystem…");
+  const RewardSystem = await ethers.getContractFactory("RewardSystem");
+  const rewardSystem = await RewardSystem.deploy(reviewManagerAddress);
+  await rewardSystem.waitForDeployment();
+  const rewardSystemAddress = await rewardSystem.getAddress();
+
+  console.log("\n✅  RewardSystem deployed successfully!");
+  console.log(`    Contract address : ${rewardSystemAddress}`);
+  console.log(`    Transaction hash : ${rewardSystem.deploymentTransaction().hash}`);
+
+  // ── 5. Print results ─────────────────────────────────────────────────────
   console.log("\n── Next step ──────────────────────────────────────────────────────────");
   console.log("Add the following lines to your .env file:");
   console.log(`  CONTRACT_ADDRESS=${contractAddress}`);
-  console.log(`  REVIEW_MANAGER_ADDRESS=${reviewManagerAddress}\n`);
+  console.log(`  REVIEW_MANAGER_ADDRESS=${reviewManagerAddress}`);
+  console.log(`  REACT_APP_REWARD_CONTRACT_ADDRESS=${rewardSystemAddress}\n`);
 }
 
 main().catch((err) => {

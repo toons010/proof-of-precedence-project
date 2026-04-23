@@ -119,7 +119,7 @@ function WalletBadge({ wallet, status }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function AppPage({ onWalletChange }) {
+export default function AppPage({ onWalletChange, initialTab }) {
   useScrollReveal();
   const [heroRef, heroP] = useElementScroll();
   const heroExit      = heroP > 0.72 ? ss(heroP, 0.72, 0.95) : 0;
@@ -142,7 +142,7 @@ export default function AppPage({ onWalletChange }) {
   }, [onWalletChange]);
 
   // ── Step state ───────────────────────────────────────────────────────────
-  const [appMode, setAppMode] = useState("registry"); // "registry" | "journals"
+  const [appMode, setAppMode] = useState(initialTab ? "journals" : "registry"); // "registry" | "journals"
   const [step, setStep] = useState("upload"); // upload | register | done
 
   // ── Upload ───────────────────────────────────────────────────────────────
@@ -286,6 +286,10 @@ export default function AppPage({ onWalletChange }) {
         {/* ── STEP 1: Upload ── */}
         {step === "upload" && (
           <div className="apppage-panel apppage-panel--dark">
+            <div className="apppage-panel__img-wrap">
+              <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800&q=80" alt="Upload" className="apppage-panel__img" />
+              <div className="apppage-panel__img-ov" />
+            </div>
             <h2 className="apppage-panel__title">Upload Your Research Paper</h2>
             <p className="apppage-panel__desc">
               Drop your PDF below. We'll pin it to IPFS and generate a unique cryptographic
@@ -362,6 +366,10 @@ export default function AppPage({ onWalletChange }) {
         {/* ── STEP 2: Register ── */}
         {step === "register" && (
           <div className="apppage-panel apppage-panel--navy">
+            <div className="apppage-panel__img-wrap">
+              <img src="https://images.unsplash.com/photo-1639322537228-f710d846310a?w=800&q=80" alt="Register" className="apppage-panel__img" />
+              <div className="apppage-panel__img-ov" />
+            </div>
             <h2 className="apppage-panel__title">Register on the Blockchain</h2>
             <p className="apppage-panel__desc">
               Your paper's unique fingerprint will be permanently recorded on-chain with
@@ -409,6 +417,10 @@ export default function AppPage({ onWalletChange }) {
         {/* ── STEP 3: Done / Certificate ── */}
         {step === "done" && (
           <div className="apppage-panel apppage-panel--navy">
+            <div className="apppage-panel__img-wrap">
+              <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&q=80" alt="Success" className="apppage-panel__img" />
+              <div className="apppage-panel__img-ov" />
+            </div>
             <div className="apppage-cert">
               <div className="apppage-cert__seal">🔒</div>
               <div className="apppage-cert__title">Precedence Established</div>
@@ -520,6 +532,7 @@ export default function AppPage({ onWalletChange }) {
             <JournalPanel 
               wallet={wallet} 
               currentCid={(verifyOther && vRes?.exists && otherCid) ? vRes.cid : cid} 
+              initialTab={initialTab}
             />
           </div>
         )}

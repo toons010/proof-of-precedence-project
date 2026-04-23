@@ -6,10 +6,11 @@
 /* ── Section wrapper ── */
 .jp__inner {
   margin: 0 auto;
-  padding: 0;
+  padding: 60px 40px;
   position: relative;
   z-index: 2;
   animation: panSlide 0.4s cubic-bezier(0.16,1,0.3,1);
+  border-radius: 4px;
 }
 
 /* ── Section header ── */
@@ -61,7 +62,7 @@
 .jp__tabs {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   background: #06070c;
   border: 1px solid #1a2030;
   border-bottom: none;
@@ -73,41 +74,48 @@
 .jp__tab {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 14px 16px;
+  padding: 16px 12px;
   background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.2s;
-  color: #8890b0;
+  transition: background 0.2s, color 0.2s;
+  color: #5a6a80;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   position: relative;
   z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.jp__tab:hover { background: rgba(255,255,255,0.05); color: #c9a84c; }
+.jp__tab:hover { color: #ffe08a; }
 
 .jp__tab--active {
-  color: #f0f2ff;
-  background: rgba(201,168,76,0.12);
+  color: #ffe08a;
 }
 
-.jp__tab-icon { font-size: 16px; }
+.jp__tab-icon { font-size: 16px; opacity: 0.8; }
+.jp__tab-label { font-family: 'Cabinet Grotesk', sans-serif; }
+
 .jp__tab-n {
-  margin-left: auto;
-  font-size: 10px;
-  opacity: 0.4;
-  font-family: monospace;
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 9px;
+  opacity: 0.3;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .jp__tab-indicator {
   position: absolute;
   bottom: 0;
-  width: 33.333%;
+  width: 25%;
   height: 2px;
-  background: linear-gradient(to right, #b8922a, #d4aa44);
-  transition: left 0.35s cubic-bezier(.16,1,.3,1);
+  background: linear-gradient(to right, #b8922a, #ffe08a);
+  transition: left 0.4s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 0 10px rgba(184,146,42,0.3);
 }
 
 /* ── Content panel ── */
@@ -121,29 +129,73 @@
 
 /* ── Sub-panel ── */
 .jp-subpanel {
-  padding: 36px 40px 40px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
+.jp-subpanel__img-wrap {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.jp-subpanel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.4) saturate(0.8);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+.jp-subpanel:hover .jp-subpanel__img {
+  transform: scale(1.05);
+}
+
+.jp-subpanel__img-ov {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, #080a12 100%);
+}
+
 .jp-subpanel__icon {
-  font-size: 36px;
-  margin-bottom: 10px;
+  position: absolute;
+  bottom: 20px;
+  left: 40px;
+  font-size: 42px;
+  z-index: 2;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 
 .jp-subpanel__title {
-  font-size: 22px;
-  font-weight: 700;
+  padding: 0 40px;
+  font-size: 26px;
+  font-weight: 800;
   color: #f0f2ff;
   margin: 0 0 8px;
 }
 
 .jp-subpanel__desc {
-  font-size: 14px;
+  padding: 0 40px;
+  font-size: 15px;
   color: #8890b0;
   line-height: 1.6;
   margin: 0 0 28px;
+}
+
+.jp-subpanel > .jp-field, 
+.jp-subpanel > .jp-btn, 
+.jp-subpanel > .jp-status, 
+.jp-subpanel > .jp-cert,
+.jp-subpanel > .jp-active-paper {
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+.jp-subpanel > .jp-btn {
+  margin-bottom: 40px;
 }
 
 /* ── Fields ── */
@@ -329,11 +381,165 @@
   word-break: break-all;
 }
 
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  .jp-subpanel { padding: 24px 20px 28px; }
+/* ── Reward Panel Premium Styles ── */
+.jp-subpanel--reward {
+  background: radial-gradient(circle at top right, rgba(184,146,42,0.1), transparent 40%), #080a12;
+  transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+
+.jp-subpanel__img--gold {
+  filter: brightness(0.5) sepia(0.3) saturate(1.2) !important;
+}
+
+.jp-subpanel__img-ov--gold {
+  background: linear-gradient(to bottom, transparent 0%, rgba(184,146,42,0.05) 50%, #080a12 100%) !important;
+}
+
+.jp-subpanel__icon--reward {
+  animation: rewardFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(184,146,42,0.6)) !important;
+}
+
+@keyframes rewardFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.1); }
+}
+
+.jp-reward-body {
+  position: relative;
+  z-index: 5;
+}
+
+.jp-reward-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 0 40px 18px;
+}
+
+.jp-reward-grid .jp-field { margin: 0; }
+
+.jp-input--gold {
+  background: rgba(184,146,42,0.05) !important;
+  border-color: rgba(184,146,42,0.2) !important;
+  color: #ffe08a !important;
+}
+
+.jp-input--gold:focus {
+  border-color: #c9a84c !important;
+  box-shadow: 0 0 0 3px rgba(184,146,42,0.15) !important;
+}
+
+.jp-reward-amt-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.jp-input--lg {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  padding: 16px 20px !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  text-align: center;
+}
+
+.jp-reward-unit {
+  position: absolute;
+  right: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #c9a84c;
+  font-weight: 700;
+}
+
+.jp-btn--reward {
+  margin-top: 10px;
+  height: 56px;
+  font-size: 16px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #c9a84c 0%, #ffe08a 45%, #d4aa44 100%) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+.jp-reward-confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: #ffe08a;
+  text-shadow: 0 0 30px rgba(184,146,42,0.8);
+  pointer-events: none;
+  animation: confettiPop 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+@keyframes confettiPop {
+  0% { opacity: 0; scale: 0.5; transform: translate(-50%, -50%) rotate(-10deg); }
+  50% { opacity: 1; scale: 1.2; }
+  100% { opacity: 1; scale: 1; transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+.jp-cert--gold {
+  background: linear-gradient(135deg, rgba(184,146,42,0.15), rgba(184,146,42,0.05)) !important;
+  border: 1px solid #c9a84c !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(184,146,42,0.2) !important;
+  position: relative;
+  overflow: hidden;
+  animation: certSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@keyframes certSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.jp-cert__shine {
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%);
+  animation: shineSweep 4s infinite;
+  pointer-events: none;
+}
+
+@keyframes shineSweep {
+  0% { transform: translate(-30%, -30%); }
+  100% { transform: translate(30%, 30%); }
+}
+
+.jp-reward-success {
+  box-shadow: 0 0 100px rgba(184,146,42,0.15);
+}
+
+@media (max-width: 768px) {
+  .jp__inner { padding: 30px 15px; }
+  .jp-subpanel__img-wrap { height: 160px; }
+  .jp-subpanel__title, 
+  .jp-subpanel__desc,
+  .jp-field, 
+  .jp-btn, 
+  .jp-status, 
+  .jp-cert,
+  .jp-active-paper {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .jp-subpanel__icon { left: 20px; }
+  .jp-subpanel__title, .jp-subpanel__desc { padding: 0; }
   .jp__tab-label { display: none; }
   .jp__tab { justify-content: center; }
+  
+  .jp-reward-grid {
+    grid-template-columns: 1fr;
+    margin: 0 20px 18px;
+  }
 }
 
 /* ── Active Paper ── */
