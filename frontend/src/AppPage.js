@@ -10,6 +10,9 @@ const ss = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
 // ─── Contract ABI ────────────────────────────────────────────────────────────
 const REGISTRY_ABI = [
   "function submitPaper(string calldata _ipfsCID) external",
+  "function submitToJournal(string calldata _ipfsCID, uint256 _journalId) external payable",
+  "function journals(uint256) external view returns (string memory name, address editor, uint256 submissionFee)",
+  "function journalCount() external view returns (uint256)",
   "function getPaper(string calldata _ipfsCID) external view returns (string memory, address, uint256, bool)",
   "function paperExists(string calldata _ipfsCID) external view returns (bool)",
   "function totalPapers() external view returns (uint256)",
@@ -142,7 +145,7 @@ export default function AppPage({ onWalletChange, initialTab }) {
   }, [onWalletChange]);
 
   // ── Step state ───────────────────────────────────────────────────────────
-  const [appMode, setAppMode] = useState(initialTab ? "journals" : "registry"); // "registry" | "journals"
+  const [role, setRole] = useState("submitter");
   const [step, setStep] = useState("upload"); // upload | register | done
 
   // ── Upload ───────────────────────────────────────────────────────────────
@@ -174,6 +177,11 @@ export default function AppPage({ onWalletChange, initialTab }) {
   const [sMsg, setSMsg]   = useState("");
   const [txHash, setTxHash] = useState("");
   const [sTs, setSTs]     = useState(null);
+  const [journals, setJournals] = useState([]);
+  const [selectedJournalId, setSelectedJournalId] = useState("");
+  const [selectedJournalFee, setSelectedJournalFee] = useState(0n);
+  const [jSt, setJSt] = useState("idle");
+  const [jMsg, setJMsg] = useState("");
 
   const doRegister = async () => {
     if (!cid)    { setSMsg("Upload a PDF first."); setSSt("error"); return; }
@@ -194,6 +202,60 @@ export default function AppPage({ onWalletChange, initialTab }) {
       setSSt("success"); setSMsg(`Confirmed · Block #${receipt.blockNumber}`);
       setTimeout(() => setStep("done"), 600);
     } catch (err) { setSSt("error"); setSMsg(err?.reason || err?.message || "Failed."); }
+  };
+
+  useEffect(() => {
+    async function loadJournals() {
+      if (role !== "submitter") return;
+      try {
+        const reg = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, new ethers.JsonRpcProvider(RPC_URL));
+        const count = await reg.journalCount();
+        const loaded = [];
+        for (let i = 1; i <= Number(count); i++) {
+          const j = await reg.journals(i);
+          loaded.push({ id: i.toString(), name: j.name, feeWei: j.submissionFee });
+        }
+        setJournals(loaded);
+        if (loaded.length > 0) {
+          setSelectedJournalId(loaded[0].id);
+          setSelectedJournalFee(loaded[0].feeWei);
+        } else {
+          setSelectedJournalId("");
+          setSelectedJournalFee(0n);
+        }
+      } catch {
+        setJournals([]);
+        setSelectedJournalId("");
+        setSelectedJournalFee(0n);
+      }
+    }
+    loadJournals();
+  }, [role]);
+
+  const onJournalChange = (id) => {
+    setSelectedJournalId(id);
+    const found = journals.find(j => j.id === id);
+    setSelectedJournalFee(found ? found.feeWei : 0n);
+  };
+
+  const doSubmitToJournal = async () => {
+    if (!cid) { setJSt("error"); setJMsg("Upload a PDF first."); return; }
+    if (!selectedJournalId) { setJSt("error"); setJMsg("Select a journal."); return; }
+    if (!wallet) { setJSt("error"); setJMsg("Wallet not connected."); return; }
+
+    setJSt("loading");
+    setJMsg("Submitting paper to journal…");
+    try {
+      const reg = new ethers.Contract(CONTRACT_ADDRESS, REGISTRY_ABI, getSigner());
+      const tx = await reg.submitToJournal(cid, selectedJournalId, { value: selectedJournalFee });
+      await tx.wait(1);
+      const selected = journals.find(j => j.id === selectedJournalId);
+      setJSt("success");
+      setJMsg(`✅ Paper successfully submitted to Journal: ${selected?.name || `#${selectedJournalId}`}`);
+    } catch (err) {
+      setJSt("error");
+      setJMsg(err?.reason || err?.message || "Failed.");
+    }
   };
 
   // ── Verify ───────────────────────────────────────────────────────────────
@@ -248,29 +310,44 @@ export default function AppPage({ onWalletChange, initialTab }) {
             style={heroFade > 0.01 ? { opacity: heroRetrace, transform: `translateY(${heroFade*40}px)` } : undefined}>
             Upload your PDF. We handle the rest — IPFS pinning, blockchain registration, and cryptographic proof.
           </p>
+          <div className="apppage-hero__meta">
+            <span className="apppage-hero__meta-pill">Wallet-native</span>
+            <span className="apppage-hero__meta-pill">IPFS + EVM</span>
+            <span className="apppage-hero__meta-pill">Tamper-proof logs</span>
+          </div>
         </div>
       </section>
 
       {/* ── Main tool ── */}
       <div className="apppage-tool" id="app-dashboard">
         
-        {/* Dashboard Mode Toggle */}
+        {/* Role selector */}
         <div className="apppage-mode-toggle">
           <button 
-            className={`apppage-mode-btn ${appMode === "registry" ? "apppage-mode-btn--active" : ""}`}
-            onClick={() => setAppMode("registry")}
+            className={`apppage-mode-btn ${role === "submitter" ? "apppage-mode-btn--active" : ""}`}
+            onClick={() => setRole("submitter")}
           >
             <span className="apppage-mode-btn__n">01</span>
-            Paper Registry
+            Submitter
           </button>
           <button 
-            className={`apppage-mode-btn ${appMode === "journals" ? "apppage-mode-btn--active" : ""}`}
-            onClick={() => setAppMode("journals")}
+            className={`apppage-mode-btn ${role === "admin" ? "apppage-mode-btn--active" : ""}`}
+            onClick={() => setRole("admin")}
           >
             <span className="apppage-mode-btn__n">02</span>
-            Journals &amp; Review
+            Admin
           </button>
-          <div className="apppage-mode-indicator" style={{ left: appMode === "registry" ? "0%" : "50%" }} />
+          <button
+            className={`apppage-mode-btn ${role === "reviewer" ? "apppage-mode-btn--active" : ""}`}
+            onClick={() => setRole("reviewer")}
+          >
+            <span className="apppage-mode-btn__n">03</span>
+            Reviewer
+          </button>
+          <div
+            className="apppage-mode-indicator"
+            style={{ left: role === "submitter" ? "0%" : role === "admin" ? "33.3333%" : "66.6666%", width: "33.3333%" }}
+          />
         </div>
 
         {/* Wallet badge — auto-connected, no input needed */}
@@ -278,7 +355,7 @@ export default function AppPage({ onWalletChange, initialTab }) {
           <WalletBadge wallet={wallet} status={wSt} />
         </div>
 
-        {appMode === "registry" ? (
+        {role === "submitter" ? (
           <div className="apppage-registry-flow page-enter">
             {/* Step progress bar */}
             <StepBar current={step} />
@@ -353,10 +430,6 @@ export default function AppPage({ onWalletChange, initialTab }) {
                     target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
                     View on IPFS ↗
                   </a>
-                  <button className="btn btn-gold btn-sm"
-                    onClick={() => setStep("register")}>
-                    Continue → Register
-                  </button>
                 </div>
               </div>
             )}
@@ -406,6 +479,44 @@ export default function AppPage({ onWalletChange, initialTab }) {
             </button>
 
             {sSt === "error" && <StatusMsg type="error" msg={sMsg} />}
+
+            {cid && (
+              <>
+                <div className="apppage-summary-card" style={{ marginTop: 14 }}>
+                  <div className="apppage-summary-card__row">
+                    <span className="apppage-summary-card__lbl">Journal</span>
+                    <span className="apppage-summary-card__val">
+                      {journals.length === 0 ? "No journals available" : (
+                        <select
+                          className="apppage-input"
+                          style={{ minWidth: 280 }}
+                          value={selectedJournalId}
+                          onChange={(e) => onJournalChange(e.target.value)}
+                        >
+                          {journals.map((j) => (
+                            <option key={j.id} value={j.id}>#{j.id} - {j.name}</option>
+                          ))}
+                        </select>
+                      )}
+                    </span>
+                  </div>
+                  <div className="apppage-summary-card__row">
+                    <span className="apppage-summary-card__lbl">Journal Fee</span>
+                    <span className="apppage-summary-card__val">{ethers.formatEther(selectedJournalFee)} ETH</span>
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-gold btn-full"
+                  style={{ marginTop: 12 }}
+                  onClick={doSubmitToJournal}
+                  disabled={jSt === "loading" || journals.length === 0}
+                >
+                  {jSt === "loading" ? <><Spin /><span>Submitting…</span></> : <span>Submit Paper to Journal</span>}
+                </button>
+                <StatusMsg type={jSt} msg={jMsg} />
+              </>
+            )}
 
             <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}
               onClick={() => setStep("upload")}>
@@ -533,6 +644,7 @@ export default function AppPage({ onWalletChange, initialTab }) {
               wallet={wallet} 
               currentCid={(verifyOther && vRes?.exists && otherCid) ? vRes.cid : cid} 
               initialTab={initialTab}
+              role={role}
             />
           </div>
         )}

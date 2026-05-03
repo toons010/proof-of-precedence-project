@@ -58,6 +58,124 @@
   line-height: 1.6;
 }
 
+.jp__wallet-badge {
+  margin: 16px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #28344d;
+  background: rgba(8, 12, 20, 0.85);
+  color: #cad2e8;
+  font-size: 12px;
+}
+
+.jp__wallet-badge--ok {
+  border-color: rgba(63, 202, 121, 0.45);
+  background: rgba(14, 32, 22, 0.75);
+}
+
+.jp__wallet-badge--warn {
+  border-color: rgba(223, 149, 71, 0.45);
+  background: rgba(39, 25, 12, 0.75);
+}
+
+.jp__wallet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #df9547;
+  box-shadow: 0 0 12px rgba(223, 149, 71, 0.8);
+}
+
+.jp__wallet-badge--ok .jp__wallet-dot {
+  background: #3fca79;
+  box-shadow: 0 0 12px rgba(63, 202, 121, 0.8);
+}
+
+.jp__wallet-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #93a1c0;
+}
+
+.jp__wallet-value {
+  font-family: 'JetBrains Mono', monospace;
+  color: #f2f5ff;
+}
+
+.jp__wallet-toggle {
+  border: 1px solid rgba(110, 135, 182, 0.35);
+  background: rgba(9, 14, 24, 0.95);
+  color: #cbd7f2;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.jp__wallet-toggle:hover {
+  border-color: rgba(201, 168, 76, 0.65);
+  color: #ffe08a;
+}
+
+.jp__wallet-details {
+  margin: 10px auto 0;
+  width: min(680px, calc(100% - 24px));
+  border: 1px solid #1f2a40;
+  border-radius: 14px;
+  background: rgba(8, 11, 20, 0.9);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.jp__wallet-details-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(83, 99, 132, 0.36);
+}
+
+.jp__wallet-details-row:last-child {
+  border-bottom: none;
+}
+
+.jp__wallet-details-label {
+  color: #8b97b5;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.jp__wallet-details-value {
+  color: #edf2ff;
+  font-size: 13px;
+}
+
+.jp__wallet-details-value--mono {
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  text-align: right;
+}
+
+.jp__wallet-details-msg {
+  color: #b9c5e4;
+  font-size: 13px;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.jp__wallet-details-msg--error {
+  color: #ffae9c;
+}
+
 /* ── Tab bar ── */
 .jp__tabs {
   position: relative;
@@ -419,6 +537,92 @@
 
 .jp-reward-grid .jp-field { margin: 0; }
 
+.jp-reward-mode {
+  display: flex;
+  gap: 10px;
+  margin: 8px 40px 16px;
+}
+
+.jp-mode-btn {
+  border: 1px solid rgba(184,146,42,0.35);
+  background: rgba(184,146,42,0.08);
+  color: #e7cc76;
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.jp-mode-btn--active {
+  background: rgba(184,146,42,0.3);
+  border-color: #d9b75f;
+  color: #fff0bf;
+}
+
+.jp-reward-note {
+  margin: 4px 40px 14px;
+  color: #d7bd6f;
+  font-size: 13px;
+}
+
+.jp-review-insight {
+  margin: 0 40px 16px;
+  padding: 14px;
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 12px;
+  background: rgba(184,146,42,0.08);
+}
+
+.jp-review-insight__title {
+  color: #ffe7a6;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.jp-review-insight__row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.jp-review-insight__label {
+  color: #d7bd6f;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.jp-review-insight__value {
+  color: #fff3cd;
+  word-break: break-word;
+}
+
+.jp-review-insight__mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.jp-review-insight__remarks {
+  margin-top: 6px;
+}
+
+.jp-review-insight__comment {
+  margin: 6px 0 0;
+  color: #fff3cd;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.jp-checkline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 40px 16px;
+  color: #dcc374;
+  font-size: 13px;
+}
+
 .jp-input--gold {
   background: rgba(184,146,42,0.05) !important;
   border-color: rgba(184,146,42,0.2) !important;
@@ -539,6 +743,19 @@
   .jp-reward-grid {
     grid-template-columns: 1fr;
     margin: 0 20px 18px;
+  }
+
+  .jp-reward-mode,
+  .jp-reward-note,
+  .jp-review-insight,
+  .jp-checkline {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .jp-review-insight__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 

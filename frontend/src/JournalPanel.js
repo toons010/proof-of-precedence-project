@@ -24,17 +24,88 @@ const REVIEW_MANAGER_ABI = [
   "function getReview(string calldata _ipfsHash, uint256 _index) external view returns (address reviewer, uint8 score, string memory comments)",
 ];
 
+const REWARD_SYSTEM_ABI = [
+  "function rewarded(string, address) view returns (bool)",
+  "function reputation(address) view returns (uint256)",
+];
+
 const RPC_URL              = process.env.REACT_APP_RPC_URL              || "http://127.0.0.1:8545";
 const REGISTRY_ADDRESS     = process.env.REACT_APP_CONTRACT_ADDRESS     || "";
 const REVIEW_MANAGER_ADDR  = process.env.REACT_APP_REVIEW_MANAGER_ADDRESS || "";
+const REWARD_SYSTEM_ADDR   = process.env.REACT_APP_REWARD_CONTRACT_ADDRESS || "";
+const REWARD_SYSTEM_ADDR_ALT = process.env.REACT_APP_REWARD_SYSTEM_ADDRESS || "";
+const HARDHAT_LOCAL_REWARD_ADDR = "0x9fE46736679d2d9a65F0992F2272dE9f3c7fa6e0";
 const DEFAULT_KEY          = process.env.REACT_APP_PRIVATE_KEY          || "";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
 
-function getSigner() {
+async function getSigner(wallet) {
+  const injectedProvider = wallet?.provider || (typeof window !== "undefined" ? window.ethereum : null);
+  if (injectedProvider) {
+    const browserProvider = new ethers.BrowserProvider(injectedProvider);
+    return browserProvider.getSigner();
+  }
+
+  if (!DEFAULT_KEY) {
+    throw new Error("No wallet provider found. Connect MetaMask or set REACT_APP_PRIVATE_KEY.");
+  }
+
   return new ethers.Wallet(DEFAULT_KEY, new ethers.JsonRpcProvider(RPC_URL));
+}
+
+async function resolveRewardContractAddress(wallet) {
+  const explicitConfiguredAddress = (REWARD_SYSTEM_ADDR || "").trim();
+  if (ethers.isAddress(explicitConfiguredAddress)) {
+    return explicitConfiguredAddress;
+  }
+
+  const fallbackConfiguredAddress = (REWARD_SYSTEM_ADDR_ALT || "").trim();
+  const candidates = [fallbackConfiguredAddress, HARDHAT_LOCAL_REWARD_ADDR];
+
+  const providers = [
+    wallet?.provider ? new ethers.BrowserProvider(wallet.provider) : null,
+    typeof window !== "undefined" && window.ethereum ? new ethers.BrowserProvider(window.ethereum) : null,
+    new ethers.JsonRpcProvider(RPC_URL),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (!ethers.isAddress(candidate)) continue;
+
+    for (const provider of providers) {
+      try {
+        const code = await provider.getCode(candidate);
+        if (code && code !== "0x") return candidate;
+      } catch {
+        // continue checking on other available providers
+      }
+    }
+  }
+
+  throw new Error(
+    "Reward contract not found on the connected network. Deploy contracts (scripts/deploy.js), set REACT_APP_REWARD_CONTRACT_ADDRESS in frontend/.env, restart the frontend, and ensure your wallet is on the same network."
+  );
+}
+
+function normalizeCid(cid) {
+  return (cid || "").trim().replace(/^ipfs:\/\//i, "");
+}
+
+function isContractMissingError(err) {
+  const msg = (err?.reason || err?.message || "").toLowerCase();
+  return msg.includes("reward contract not found");
+}
+
+function saveDummyRewardRecord(record) {
+  try {
+    const key = "dummyRewardRecords";
+    const prev = JSON.parse(localStorage.getItem(key) || "[]");
+    const next = [record, ...prev].slice(0, 100);
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    // non-blocking in demo mode
+  }
 }
 
 function Spin() { return <span className="jp-spin" />; }
@@ -75,7 +146,8 @@ function CreateJournalPanel({ wallet }) {
     if (!name.trim())    { setMsg("Enter a journal name."); setSt("error"); return; }
     setSt("loading"); setMsg("Creating journal…");
     try {
-      const reg = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_JOURNAL_ABI, getSigner());
+      const signer = await getSigner(wallet);
+      const reg = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_JOURNAL_ABI, signer);
       const feeWei = ethers.parseEther(fee || "0");
       const tx = await reg.createJournal(name.trim(), feeWei);
       setMsg("Awaiting confirmation…");
@@ -171,7 +243,8 @@ function SubmitToJournalPanel({ wallet, currentCid }) {
     if (!currentCid)               { setMsg("Please upload, register, or verify a paper first."); setSt("error"); return; }
     setSt("loading"); setMsg("Checking journal…"); setTxHash("");
     try {
-      const reg = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_JOURNAL_ABI, getSigner());
+      const signer = await getSigner(wallet);
+      const reg = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_JOURNAL_ABI, signer);
 
       // Auto-detect fee
       const journalItem = journals.find(j => j.id.toString() === journalId.toString());
@@ -243,22 +316,56 @@ function SubmitToJournalPanel({ wallet, currentCid }) {
 }
 
 function ReviewPanel({ wallet, currentCid }) {
+  const [rCid, setRCid]           = useState(currentCid || "");
   const [rScore, setRScore]       = useState("5");
   const [rComments, setRComments] = useState("");
   const [rvSt, setRvSt]           = useState("idle");
   const [rvMsg, setRvMsg]         = useState("");
   const [rvTx, setRvTx]           = useState("");
+  const [regSt, setRegSt]         = useState("idle");
+  const [regMsg, setRegMsg]       = useState("");
+  const [rewardMsg, setRewardMsg] = useState("");
+
+  useEffect(() => {
+    setRCid(currentCid || "");
+  }, [currentCid]);
+
+  const normalizedCid = normalizeCid(rCid);
+  const reviewFileUrl = normalizedCid ? `https://ipfs.io/ipfs/${normalizedCid}` : "";
+
+  const doRegisterReviewer = async () => {
+    if (!wallet) { setRegSt("error"); setRegMsg("Connect wallet first."); return; }
+    setRegSt("loading");
+    setRegMsg("Registering reviewer…");
+    try {
+      const signer = await getSigner(wallet);
+      const rm = new ethers.Contract(REVIEW_MANAGER_ADDR, REVIEW_MANAGER_ABI, signer);
+      if (await rm.isReviewer(wallet)) {
+        setRegSt("success");
+        setRegMsg("Reviewer already registered.");
+        return;
+      }
+      const tx = await rm.registerReviewer();
+      await tx.wait(1);
+      setRegSt("success");
+      setRegMsg("Reviewer registration successful.");
+    } catch (err) {
+      setRegSt("error");
+      setRegMsg(err?.reason || err?.message || "Failed.");
+    }
+  };
 
   const doReview = async () => {
     if (!wallet)          { setRvMsg("Connect wallet first."); setRvSt("error"); return; }
-    if (!currentCid)      { setRvMsg("Please upload, register, or verify a paper first."); setRvSt("error"); return; }
+    if (!rCid.trim())     { setRvMsg("Enter a paper CID."); setRvSt("error"); return; }
     
     const score = Number(rScore);
     if (!score || score < 1 || score > 5) { setRvMsg("Score must be 1–5."); setRvSt("error"); return; }
     
     setRvSt("loading"); setRvMsg("Verifying setup…"); setRvTx("");
     try {
-      const rm = new ethers.Contract(REVIEW_MANAGER_ADDR, REVIEW_MANAGER_ABI, getSigner());
+      const signer = await getSigner(wallet);
+      const rm = new ethers.Contract(REVIEW_MANAGER_ADDR, REVIEW_MANAGER_ABI, signer);
 
       // Auto-register if not reviewer
       if (!(await rm.isReviewer(wallet))) {
@@ -267,15 +374,22 @@ function ReviewPanel({ wallet, currentCid }) {
         await regTx.wait(1);
       }
 
-      if (await rm.hasReviewed(currentCid, wallet)) {
+      if (await rm.hasReviewed(normalizedCid, wallet)) {
         setRvSt("error"); setRvMsg("You have already reviewed this paper."); return;
       }
 
       setRvMsg("Submitting review…");
-      const tx = await rm.submitReview(currentCid, score, rComments.trim());
+      const tx = await rm.submitReview(normalizedCid, score, rComments.trim());
       setRvTx(tx.hash); setRvMsg("Awaiting confirmation…");
       const receipt = await tx.wait(1);
       setRvSt("success"); setRvMsg(`Review submitted · Block #${receipt.blockNumber}`);
+
+      if (REWARD_SYSTEM_ADDR) {
+        const reward = new ethers.Contract(REWARD_SYSTEM_ADDR, REWARD_SYSTEM_ABI, new ethers.JsonRpcProvider(RPC_URL));
+        const wasRewarded = await reward.rewarded(normalizedCid, wallet);
+        const rep = await reward.reputation(wallet);
+        setRewardMsg(wasRewarded || Number(rep) > 0 ? "You have been rewarded" : "No reward yet.");
+      }
     } catch (err) {
       setRvSt("error"); setRvMsg(err?.reason || err?.message || "Failed.");
     }
@@ -291,16 +405,34 @@ function ReviewPanel({ wallet, currentCid }) {
       <h3 className="jp-subpanel__title">Peer Review</h3>
       <p className="jp-subpanel__desc">Review the currently active paper. We handle the reviewer registration automatically behind the scenes.</p>
 
-      {currentCid ? (
-        <div className="jp-active-paper">
-          <span className="jp-active-paper__lbl">Active Paper CID:</span>
-          <span className="jp-active-paper__val">{currentCid.slice(0, 10)}…{currentCid.slice(-6)}</span>
-        </div>
-      ) : (
-        <div className="jp-status" style={{ background: 'rgba(255,255,255,0.05)', color: '#8890b0', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <span>ℹ</span> No active paper. Upload, register, or verify a paper above first.
-        </div>
+      <Field label="Paper CID">
+        <input className="jp-input" placeholder="bafybe..." value={rCid} onChange={e => setRCid(e.target.value)} />
+      </Field>
+
+      {reviewFileUrl && (
+        <>
+          <a
+            className="jp-btn"
+            href={reviewFileUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ textAlign: "center", textDecoration: "none" }}
+          >
+            View Paper File
+          </a>
+          <div className="jp-active-paper" style={{ marginTop: 12 }}>
+            <span className="jp-active-paper__lbl">Preview:</span>
+            <a href={reviewFileUrl} target="_blank" rel="noreferrer" className="jp-active-paper__val">
+              {normalizedCid.slice(0, 14)}…{normalizedCid.slice(-8)}
+            </a>
+          </div>
+        </>
       )}
+
+      <button className="jp-btn jp-btn--gold" onClick={doRegisterReviewer} disabled={regSt === "loading"}>
+        {regSt === "loading" ? <><Spin /><span>Registering…</span></> : "Register as Reviewer"}
+      </button>
+      <StatusMsg type={regSt} msg={regMsg} />
 
       <Field label="Score (1 = Poor · 5 = Excellent)">
         <select className="jp-input jp-select" value={rScore} onChange={e => setRScore(e.target.value)}>
@@ -311,11 +443,12 @@ function ReviewPanel({ wallet, currentCid }) {
         <textarea className="jp-input jp-textarea" placeholder="Your review comments…" value={rComments} onChange={e => setRComments(e.target.value)} rows={4} />
       </Field>
 
-      <button className="jp-btn jp-btn--gold" onClick={doReview} disabled={rvSt === "loading" || !currentCid}>
+      <button className="jp-btn jp-btn--gold" onClick={doReview} disabled={rvSt === "loading" || !rCid.trim()}>
         {rvSt === "loading" ? <><Spin /><span>Submitting…</span></> : "Submit Review"}
       </button>
 
       <StatusMsg type={rvSt} msg={rvMsg} />
+      {rewardMsg && <div className="jp-status jp-status--ok"><span className="jp-status__icon">✓</span><span className="jp-status__text">{rewardMsg}</span></div>}
 
       {rvSt === "success" && rvTx && (
         <div className="jp-cert">
@@ -333,32 +466,105 @@ function ReviewPanel({ wallet, currentCid }) {
 // Main export
 // ────────────────────────────────────────────────────────────────────────────
 
-function RewardPanel({ wallet }) {
-  const [rewardCID, setRewardCID] = useState("");
-  const [rewardReviewer, setRewardReviewer] = useState("");
+function RewardPanel({ wallet, currentCid }) {
+  const [paperName, setPaperName] = useState("");
+  const [reviewerName, setReviewerName] = useState("");
   const [rewardAmount, setRewardAmount] = useState("");
+  const [reviewers, setReviewers] = useState([]);
+  const [reviewersSt, setReviewersSt] = useState("idle");
   const [st, setSt] = useState("idle");
   const [msg, setMsg] = useState("");
   const [txHash, setTxHash] = useState("");
+  const [demoProof, setDemoProof] = useState("");
 
   const [confetti, setConfetti] = useState(false);
 
+  const normalizedCurrentCid = normalizeCid(currentCid);
+
+  useEffect(() => {
+    const loadReviewers = async () => {
+      if (!normalizedCurrentCid || !REVIEW_MANAGER_ADDR) {
+        setReviewers([]);
+        setReviewersSt("idle");
+        return;
+      }
+      setReviewersSt("loading");
+      try {
+        const rm = new ethers.Contract(REVIEW_MANAGER_ADDR, REVIEW_MANAGER_ABI, new ethers.JsonRpcProvider(RPC_URL));
+        const count = Number(await rm.reviewCount(normalizedCurrentCid));
+        const loaded = [];
+        for (let i = 0; i < count; i++) {
+          const [reviewerAddr, score, comments] = await rm.getReview(normalizedCurrentCid, i);
+          loaded.push({
+            label: `Reviewer ${i + 1}`,
+            address: reviewerAddr,
+            addressShort: `${reviewerAddr.slice(0, 6)}…${reviewerAddr.slice(-4)}`,
+            score: Number(score),
+            comments: comments || "",
+          });
+        }
+        setReviewers(loaded);
+        setReviewersSt("success");
+      } catch {
+        setReviewers([]);
+        setReviewersSt("error");
+      }
+    };
+
+    loadReviewers();
+  }, [normalizedCurrentCid]);
+
+  const normalizedReviewerName = reviewerName.trim().toLowerCase();
+  const selectedReviewer = reviewers.find(item => {
+    const labelMatch = item.label.toLowerCase() === normalizedReviewerName;
+    const shortMatch = item.addressShort.toLowerCase() === normalizedReviewerName;
+    const fullMatch = item.address.toLowerCase() === normalizedReviewerName;
+    return labelMatch || shortMatch || fullMatch;
+  });
+
+  useEffect(() => {
+    if (!selectedReviewer || !normalizedCurrentCid || paperName.trim()) return;
+    setPaperName(`CID: ${normalizedCurrentCid}`);
+  }, [selectedReviewer, normalizedCurrentCid, paperName]);
+
   const handleReward = async () => {
     if (!wallet)          { setMsg("Connect wallet first."); setSt("error"); return; }
-    if (!rewardCID.trim()) { setMsg("Enter a paper CID."); setSt("error"); return; }
-    if (!rewardReviewer.trim()) { setMsg("Enter a reviewer address."); setSt("error"); return; }
+    if (!normalizedCurrentCid) { setMsg("No active paper found. Submit/select a paper first."); setSt("error"); return; }
+    if (!reviewerName.trim()) { setMsg("Enter a reviewer name."); setSt("error"); return; }
+    if (!selectedReviewer) { setMsg("Reviewer not found for the active paper. Use the suggested reviewer name."); setSt("error"); return; }
     if (!rewardAmount || Number(rewardAmount) <= 0) { setMsg("Enter a valid reward amount."); setSt("error"); return; }
 
-    setSt("loading"); setMsg("Processing transaction..."); setTxHash(""); setConfetti(false);
+    setSt("loading"); setMsg("Processing reward..."); setTxHash(""); setDemoProof(""); setConfetti(false);
     try {
-      const signer = getSigner();
-      const rewardAddress = process.env.REACT_APP_REWARD_CONTRACT_ADDRESS;
+      const signer = await getSigner(wallet);
+      let rewardAddress = "";
+      try {
+        rewardAddress = await resolveRewardContractAddress(wallet);
+      } catch (resolutionErr) {
+        if (!isContractMissingError(resolutionErr)) throw resolutionErr;
+
+        const dummyId = `DUMMY-${Date.now().toString(36).toUpperCase()}`;
+        saveDummyRewardRecord({
+          id: dummyId,
+          cid: normalizedCurrentCid,
+          paperName: paperName.trim() || `CID: ${normalizedCurrentCid}`,
+          reviewer: selectedReviewer.address,
+          reviewerLabel: selectedReviewer.label,
+          amount: rewardAmount,
+          createdAt: new Date().toISOString(),
+        });
+        setDemoProof(dummyId);
+        setSt("success");
+        setConfetti(true);
+        setMsg("Reward recorded in demo mode (no real coins used). Contract deployment is optional for this college project.");
+        return;
+      }
       const rewardABI = ["function rewardReviewer(string ipfsHash, address reviewer) payable"];
       const rewardContract = new ethers.Contract(rewardAddress, rewardABI, signer);
       const value = ethers.parseEther(rewardAmount);
 
       setMsg("Authorizing value transfer…");
-      const tx = await rewardContract.rewardReviewer(rewardCID, rewardReviewer, { value });
+      const tx = await rewardContract.rewardReviewer(normalizedCurrentCid, selectedReviewer.address, { value });
       setTxHash(tx.hash);
       setMsg("Confirming on-chain…");
       
@@ -382,21 +588,62 @@ function RewardPanel({ wallet }) {
       
       <div className="jp-reward-body">
         <h3 className="jp-subpanel__title gold-text">Disperse Reward</h3>
-        <p className="jp-subpanel__desc">Recognize exceptional contributions by issuing an on-chain reward and a cryptographic certificate of excellence.</p>
+        <p className="jp-subpanel__desc">Recognize exceptional contributions. This panel supports both on-chain rewards and dummy demo rewards (no real coins needed).</p>
 
         <div className="jp-reward-grid">
-          <Field label="Paper CID">
-            <input className="jp-input jp-input--gold" placeholder="bafybe..." value={rewardCID} onChange={e => setRewardCID(e.target.value)} />
+          <Field label="Paper Name">
+            <input className="jp-input jp-input--gold" placeholder="e.g. Quantum Vision Study" value={paperName} onChange={e => setPaperName(e.target.value)} />
           </Field>
-          <Field label="Reviewer Address">
-            <input className="jp-input jp-input--gold" placeholder="0x..." value={rewardReviewer} onChange={e => setRewardReviewer(e.target.value)} />
+          <Field label="Reviewer Name">
+            <input className="jp-input jp-input--gold" placeholder="e.g. Reviewer 1" value={reviewerName} onChange={e => setReviewerName(e.target.value)} list="jp-reviewer-suggestions" />
+            <datalist id="jp-reviewer-suggestions">
+              {reviewers.map(r => (
+                <option key={`${r.address}-${r.label}`} value={r.label}>{`${r.label} (${r.addressShort})`}</option>
+              ))}
+            </datalist>
           </Field>
         </div>
+
+        <p className="jp-reward-note">
+          {reviewersSt === "loading"
+            ? "Loading reviewers from backend…"
+            : reviewers.length > 0
+              ? "CID and reviewer are auto-resolved from the active paper and selected reviewer."
+              : "No reviewer found on-chain for the active paper yet."}
+        </p>
+
+        {selectedReviewer && (
+          <div className="jp-review-insight">
+            <div className="jp-review-insight__title">Review Details Before Reward</div>
+            <div className="jp-review-insight__row">
+              <span className="jp-review-insight__label">Paper</span>
+              <span className="jp-review-insight__value">{paperName.trim() || "(enter paper name)"}</span>
+            </div>
+            <div className="jp-review-insight__row">
+              <span className="jp-review-insight__label">CID</span>
+              <span className="jp-review-insight__value jp-review-insight__mono">{normalizedCurrentCid}</span>
+            </div>
+            <div className="jp-review-insight__row">
+              <span className="jp-review-insight__label">Reviewer</span>
+              <span className="jp-review-insight__value">{selectedReviewer.label} ({selectedReviewer.addressShort})</span>
+            </div>
+            <div className="jp-review-insight__row">
+              <span className="jp-review-insight__label">Score</span>
+              <span className="jp-review-insight__value">{selectedReviewer.score}/5</span>
+            </div>
+            <div className="jp-review-insight__remarks">
+              <span className="jp-review-insight__label">Remarks</span>
+              <p className="jp-review-insight__comment">
+                {selectedReviewer.comments?.trim() || "No remarks were submitted by this reviewer."}
+              </p>
+            </div>
+          </div>
+        )}
         
-        <Field label="Reward Amount (ETH)">
+        <Field label="Reward Amount (Demo ETH)">
           <div className="jp-reward-amt-wrap">
             <input className="jp-input jp-input--gold jp-input--lg" type="number" min="0" step="0.01" placeholder="0.05" value={rewardAmount} onChange={e => setRewardAmount(e.target.value)} />
-            <span className="jp-reward-unit">ETH</span>
+            <span className="jp-reward-unit">DEMO</span>
           </div>
         </Field>
 
@@ -406,15 +653,15 @@ function RewardPanel({ wallet }) {
 
         <StatusMsg type={st} msg={msg} />
 
-        {st === "success" && txHash && (
+        {st === "success" && (txHash || demoProof) && (
           <div className="jp-cert jp-cert--gold">
             <div className="jp-cert__shine" />
             <div className="jp-cert__seal">🏆</div>
             <div className="jp-cert__title">Excellence Certified</div>
-            <p className="jp-cert__sub">Reward of {rewardAmount} ETH has been permanently recorded on-chain.</p>
+            <p className="jp-cert__sub">Reward of {rewardAmount} {txHash ? "ETH" : "DEMO"} has been {txHash ? "permanently recorded on-chain" : "recorded in local demo mode"}.</p>
             <div className="jp-cert__row">
               <span className="jp-cert__lbl">Proof</span>
-              <span className="jp-cert__val">{txHash.slice(0,32)}…</span>
+              <span className="jp-cert__val">{txHash ? `${txHash.slice(0,32)}…` : demoProof}</span>
             </div>
           </div>
         )}
@@ -432,24 +679,117 @@ const SUBTABS = [
   { id: "reward",          icon: "🏆", label: "Reward Reviewer",   n: "07" },
 ];
 
-export default function JournalPanel({ wallet, currentCid, initialTab }) {
-  const [tab, setTab] = useState(initialTab || "create-journal");
+export default function JournalPanel({ wallet, currentCid, initialTab, role = "submitter" }) {
+  const defaultTab = role === "admin" ? "create-journal" : role === "reviewer" ? "review" : (initialTab || "submit-journal");
+  const [tab, setTab] = useState(defaultTab);
   const [headRef, headOff] = useParallax(0.1);
+  const [walletDetailsOpen, setWalletDetailsOpen] = useState(false);
+  const [walletDetailsLoading, setWalletDetailsLoading] = useState(false);
+  const [walletDetailsError, setWalletDetailsError] = useState("");
+  const [walletDetails, setWalletDetails] = useState(null);
+  const walletShort = wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Not connected";
+  const roleTabs = role === "admin"
+    ? SUBTABS.filter(t => t.id === "create-journal" || t.id === "reward")
+    : role === "reviewer"
+      ? SUBTABS.filter(t => t.id === "review")
+      : SUBTABS.filter(t => t.id === "submit-journal");
+
+  const loadWalletDetails = async () => {
+    if (!wallet) {
+      setWalletDetails(null);
+      setWalletDetailsError("Connect wallet to view details.");
+      return;
+    }
+
+    try {
+      setWalletDetailsLoading(true);
+      setWalletDetailsError("");
+
+      const injectedProvider = (typeof window !== "undefined" && window.ethereum) ? window.ethereum : null;
+      const provider = injectedProvider ? new ethers.BrowserProvider(injectedProvider) : new ethers.JsonRpcProvider(RPC_URL);
+      const [network, balance, txCount] = await Promise.all([
+        provider.getNetwork(),
+        provider.getBalance(wallet),
+        provider.getTransactionCount(wallet),
+      ]);
+
+      setWalletDetails({
+        address: wallet,
+        balance: Number(ethers.formatEther(balance)).toFixed(4),
+        network: network.name === "unknown" ? "Custom Network" : network.name,
+        chainId: Number(network.chainId),
+        txCount,
+      });
+    } catch (err) {
+      setWalletDetails(null);
+      setWalletDetailsError(err?.message || "Could not load wallet details.");
+    } finally {
+      setWalletDetailsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setTab(defaultTab);
+  }, [defaultTab]);
+
+  useEffect(() => {
+    if (!walletDetailsOpen) return;
+    loadWalletDetails();
+  }, [walletDetailsOpen, wallet]);
 
   return (
     <div className="jp__inner tech-grid-bg">
       <div className="jp__header" ref={headRef} style={{ transform: `translateY(${headOff}px)` }}>
         <div className="jp__header-eyebrow">Phase 2</div>
-        <h2 className="jp__header-title">Journals &amp; <em>Peer Review</em></h2>
+        <h2 className="jp__header-title">{role === "admin" ? "Admin" : role === "reviewer" ? "Reviewer" : "Submitter"} <em>Interface</em></h2>
         <p className="jp__header-sub">
           Create on-chain journals with submission fees, submit papers to specific
           journals, and record immutable peer reviews.
         </p>
+        <div className={`jp__wallet-badge ${wallet ? "jp__wallet-badge--ok" : "jp__wallet-badge--warn"}`} title={wallet || "Wallet not connected"}>
+          <span className="jp__wallet-dot" />
+          <span className="jp__wallet-label">Wallet</span>
+          <span className="jp__wallet-value">{walletShort}</span>
+          <button
+            type="button"
+            className="jp__wallet-toggle"
+            onClick={() => setWalletDetailsOpen(v => !v)}
+          >
+            {walletDetailsOpen ? "Hide" : "View"}
+          </button>
+        </div>
+
+        {walletDetailsOpen && (
+          <div className="jp__wallet-details">
+            {walletDetailsLoading && <div className="jp__wallet-details-msg">Loading wallet details…</div>}
+            {!walletDetailsLoading && walletDetailsError && <div className="jp__wallet-details-msg jp__wallet-details-msg--error">{walletDetailsError}</div>}
+            {!walletDetailsLoading && !walletDetailsError && walletDetails && (
+              <>
+                <div className="jp__wallet-details-row">
+                  <span className="jp__wallet-details-label">Address</span>
+                  <span className="jp__wallet-details-value jp__wallet-details-value--mono">{walletDetails.address}</span>
+                </div>
+                <div className="jp__wallet-details-row">
+                  <span className="jp__wallet-details-label">Balance</span>
+                  <span className="jp__wallet-details-value">{walletDetails.balance} ETH</span>
+                </div>
+                <div className="jp__wallet-details-row">
+                  <span className="jp__wallet-details-label">Network</span>
+                  <span className="jp__wallet-details-value">{walletDetails.network} (Chain ID: {walletDetails.chainId})</span>
+                </div>
+                <div className="jp__wallet-details-row">
+                  <span className="jp__wallet-details-label">Transactions</span>
+                  <span className="jp__wallet-details-value">{walletDetails.txCount}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Sub-tab bar */}
-      <div className="jp__tabs" style={{ gridTemplateColumns: `repeat(${SUBTABS.length}, 1fr)` }}>
-        {SUBTABS.map(({ id, icon, label, n }) => (
+      <div className="jp__tabs" style={{ gridTemplateColumns: `repeat(${roleTabs.length}, 1fr)` }}>
+        {roleTabs.map(({ id, icon, label, n }) => (
           <button
             key={id}
             className={`jp__tab ${tab === id ? "jp__tab--active" : ""}`}
@@ -463,8 +803,8 @@ export default function JournalPanel({ wallet, currentCid, initialTab }) {
         <div
           className="jp__tab-indicator"
           style={{ 
-            width: `${100 / SUBTABS.length}%`, 
-            left: `${SUBTABS.findIndex(t => t.id === tab) * (100 / SUBTABS.length)}%` 
+            width: `${100 / roleTabs.length}%`,
+            left: `${Math.max(roleTabs.findIndex(t => t.id === tab), 0) * (100 / roleTabs.length)}%` 
           }}
         />
       </div>
@@ -475,7 +815,7 @@ export default function JournalPanel({ wallet, currentCid, initialTab }) {
           {tab === "create-journal"  && <CreateJournalPanel    wallet={wallet} />}
           {tab === "submit-journal"  && <SubmitToJournalPanel  wallet={wallet} currentCid={currentCid} />}
           {tab === "review"          && <ReviewPanel           wallet={wallet} currentCid={currentCid} />}
-          {tab === "reward"          && <RewardPanel           wallet={wallet} />}
+          {tab === "reward"          && <RewardPanel           wallet={wallet} currentCid={currentCid} />}
         </div>
       </div>
     </div>

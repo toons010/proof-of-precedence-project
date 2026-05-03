@@ -61,8 +61,8 @@ async function main() {
   // ── 5. Print results ─────────────────────────────────────────────────────
   console.log("\n── Next step ──────────────────────────────────────────────────────────");
   console.log("Add the following lines to your .env file:");
-  console.log(`  CONTRACT_ADDRESS=${contractAddress}`);
-  console.log(`  REVIEW_MANAGER_ADDRESS=${reviewManagerAddress}`);
+  console.log(`  REACT_APP_CONTRACT_ADDRESS=${contractAddress}`);
+  console.log(`  REACT_APP_REVIEW_MANAGER_ADDRESS=${reviewManagerAddress}`);
   console.log(`  REACT_APP_REWARD_CONTRACT_ADDRESS=${rewardSystemAddress}\n`);
 }
 
